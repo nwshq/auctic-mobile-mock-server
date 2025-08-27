@@ -4,6 +4,10 @@ namespace MockServer\Auth\JWToken;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\JwtFacade;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
 
 class MockJWTtokenController
 {
@@ -20,7 +24,7 @@ class MockJWTtokenController
             'qrCode' => $qrCode,
             'mobileDeepLink' => $mobileDeepLink,
             'accessToken' => $pat,
-            'jwt' => $jwt,
+            'jwt' => $jwt->toString(),
             'config' => $this->getMockMobileConfig()
         ]);
     }
@@ -55,33 +59,32 @@ class MockJWTtokenController
         ];
     }
 
-    private function createMockJwt(string $pat): string
+    private function createMockJwt(string $pat)
     {
-        $header = base64_encode(json_encode([
-            'alg' => 'HS256',
-            'typ' => 'JWT'
-        ]));
+        $payload = [
+            'config' => $this->getMockMobileConfig(),
+            'accessToken' => $pat,
+        ];
 
-        $payload = base64_encode(json_encode([
-            'iss' => config('app.url', 'http://localhost:8000'),
-            'aud' => 'auctic-mobile-app',
-            'exp' => time() + 3600,
-            'sub' => 'mock_user_' . rand(1, 1000),
-            'encrypted_payload' => $this->encryptMockPayload([
-                'config' => $this->getMockMobileConfig(),
-                'accessToken' => $pat,
-            ])
-        ]));
-
-        $signature = base64_encode('mock_signature_' . Str::random(20));
-
-        return $header . '.' . $payload . '.' . $signature;
+        return (new JwtFacade())->issue(
+            new Sha256(),
+            InMemory::base64Encoded(config('jwt.key')),
+            function (Builder $builder, \DateTimeImmutable $issuedAt) use ($payload) {
+                return $builder
+                    ->issuedBy(config('app.url', 'http://localhost:8000'))
+                    ->permittedFor(config('jwt.audience'))
+                    ->expiresAt($issuedAt->modify(sprintf('+%d minutes', config('jwt.expires_at'))))
+                    ->relatedTo('mock_user_' . rand(1, 1000))
+                    ->withClaim('encrypted_payload', $this->encryptMockPayload($payload));
+            }
+        );
     }
 
     private function encryptMockPayload(array $payload): string
     {
         // Mock encryption key - in production this would come from config
-        $key = base64_decode('bW9ja19lbmNyeXB0aW9uX2tleV9mb3JfdGVzdGluZw==');
+        $key = base64_decode(config('jwt.encryption_key'));
+
         $iv = random_bytes(16);
         $data = json_encode($payload);
         
@@ -106,12 +109,12 @@ class MockJWTtokenController
         return 'data:image/png;base64,' . $mockQrData;
     }
 
-    private function generateMobileDeepLink(string $jwt): string
+    private function generateMobileDeepLink($jwt): string
     {
         return sprintf(
             '%s?token=%s',
             self::MOBILE_DEEP_LINK_PREFIX,
-            urlencode($jwt)
+            urlencode($jwt->toString())
         );
     }
 }

@@ -67,9 +67,12 @@ class MockJWTtokenControllerTest extends TestCase
         $jwtParts = explode('.', $data['jwt']);
         $this->assertCount(3, $jwtParts);
         
-        // Each part should be base64 encoded
+        // Each part should be base64url encoded (URL-safe base64)
         foreach ($jwtParts as $part) {
-            $this->assertNotFalse(base64_decode($part, true));
+            // Convert base64url to base64
+            $base64 = strtr($part, '-_', '+/');
+            $base64 = str_pad($base64, strlen($base64) % 4, '=', STR_PAD_RIGHT);
+            $this->assertNotFalse(base64_decode($base64, true));
         }
     }
 
@@ -125,9 +128,11 @@ class MockJWTtokenControllerTest extends TestCase
         
         $data = $response->json();
         
-        // Decode JWT payload (middle part)
+        // Decode JWT payload (middle part - base64url encoded)
         $jwtParts = explode('.', $data['jwt']);
-        $payload = json_decode(base64_decode($jwtParts[1]), true);
+        $base64 = strtr($jwtParts[1], '-_', '+/');
+        $base64 = str_pad($base64, strlen($base64) % 4, '=', STR_PAD_RIGHT);
+        $payload = json_decode(base64_decode($base64), true);
         
         $this->assertArrayHasKey('encrypted_payload', $payload);
         
@@ -138,8 +143,8 @@ class MockJWTtokenControllerTest extends TestCase
         $iv = substr($encryptedData, 0, 16);
         $encrypted = substr($encryptedData, 16);
         
-        // Mock decryption key (same as in controller)
-        $key = base64_decode('bW9ja19lbmNyeXB0aW9uX2tleV9mb3JfdGVzdGluZw==');
+        // Get the decryption key from config (it's base64 encoded)
+        $key = base64_decode(config('jwt.encryption_key'));
         
         // Decrypt the payload
         $decrypted = openssl_decrypt(
@@ -164,13 +169,16 @@ class MockJWTtokenControllerTest extends TestCase
         
         $data = $response->json();
         
-        // Decode JWT payload
+        // Decode JWT payload (base64url encoded)
         $jwtParts = explode('.', $data['jwt']);
-        $payload = json_decode(base64_decode($jwtParts[1]), true);
+        $base64 = strtr($jwtParts[1], '-_', '+/');
+        $base64 = str_pad($base64, strlen($base64) % 4, '=', STR_PAD_RIGHT);
+        $payload = json_decode(base64_decode($base64), true);
         
         $this->assertArrayHasKey('exp', $payload);
         $this->assertGreaterThan(time(), $payload['exp']);
-        // Should expire in about 1 hour (3600 seconds)
-        $this->assertLessThanOrEqual(time() + 3700, $payload['exp']);
+        // Should expire in configured time (default 60 minutes = 3600 seconds)
+        $expirationMinutes = config('jwt.expires_at', 60);
+        $this->assertLessThanOrEqual(time() + ($expirationMinutes * 60) + 100, $payload['exp']);
     }
 }
