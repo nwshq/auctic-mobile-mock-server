@@ -4,7 +4,6 @@ namespace MockServer\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 class MockDataService
 {
@@ -33,94 +32,177 @@ class MockDataService
     }
     
     /**
-     * Generate fresh mock data
+     * Generate fresh mock data using real structure from hydrate-example.json
      */
     private function generateFreshData(): void
     {
-        $events = [];
-        
-        for ($i = 1; $i <= 5; $i++) {
-            $eventId = (string) $i;
-            $listings = [];
-            
-            // Generate listings for this event
-            $listingCount = rand(3, 8);
-            for ($j = 1; $j <= $listingCount; $j++) {
-                $listingId = (string) ($i * 1000 + $j);
-                $listingMedia = [];
-                
-                // Generate media for this listing
-                $mediaCount = rand(0, 3);
-                for ($k = 1; $k <= $mediaCount; $k++) {
-                    $listingMedia[] = $this->generateMedia(
-                        (string) ($listingId * 100 + $k),
-                        'listing',
-                        $listingId
-                    );
-                }
-                
-                $listings[] = [
-                    'id' => $listingId,
-                    'event_id' => $eventId,
-                    'title' => $this->getRandomProductName(),
-                    'description' => $this->getRandomDescription(),
-                    'starting_price' => rand(100, 5000),
-                    'current_price' => rand(100, 10000),
-                    'reserve_price' => rand(1000, 20000),
-                    'status' => $this->randomFrom(['pending', 'approved', 'active', 'sold', 'passed', 'withdrawn']),
-                    'category' => $this->getRandomCategory(),
-                    'condition' => $this->randomFrom(['new', 'like_new', 'good', 'fair', 'poor']),
-                    'metadata' => [
-                        'lot_number' => 'LOT-' . rand(100, 999),
-                        'estimate_low' => rand(100, 5000),
-                        'estimate_high' => rand(5000, 50000),
-                    ],
-                    'created_at' => Carbon::now()->subDays(rand(30, 365))->toIso8601String(),
-                    'updated_at' => Carbon::now()->subDays(rand(1, 29))->toIso8601String(),
-                    'deleted_at' => null,
-                    'media' => $listingMedia,
-                    'media_count' => count($listingMedia)
-                ];
-            }
-            
-            // Generate event media
-            $eventMedia = [];
-            $eventMediaCount = rand(1, 2);
-            for ($k = 1; $k <= $eventMediaCount; $k++) {
-                $eventMedia[] = $this->generateMedia(
-                    (string) ($eventId * 10000 + $k),
-                    'event',
-                    $eventId
-                );
-            }
-            
-            $events[] = [
-                'id' => $eventId,
-                'name' => $this->getRandomEventName(),
-                'description' => $this->getRandomDescription(),
-                'event_date' => Carbon::now()->addDays(rand(1, 60))->toIso8601String(),
-                'location' => $this->getRandomLocation(),
-                'status' => $this->randomFrom(['draft', 'published', 'active', 'completed', 'cancelled']),
-                'metadata' => [
-                    'venue' => $this->getRandomVenue(),
-                    'start_date' => Carbon::now()->addDays(rand(1, 60))->toIso8601String(),
-                    'end_date' => Carbon::now()->addDays(rand(61, 90))->toIso8601String(),
-                    'preview_start_date' => Carbon::now()->addDays(rand(1, 30))->toIso8601String(),
-                    'preview_end_date' => Carbon::now()->addDays(rand(31, 59))->toIso8601String(),
-                    'terms_and_conditions' => $this->getRandomTerms(),
-                    'buyer_premium' => rand(10, 25),
-                    'currency' => 'USD',
-                    'timezone' => 'America/New_York'
+        $events = [
+            [
+                'id' => 21,
+                'status' => 'active',
+                'event_type' => 'live_auction',
+                'title' => 'MIRA Dissolution Authority - Live Sale!',
+                'description' => '<p>Test</p>',
+                'start_time' => '2024-12-13T15:10:00+00:00',
+                'end_time' => '2025-12-13T15:10:00+00:00',
+                'hero_media' => [
+                    'id' => 68481,
+                    'model_type' => 'App\\Models\\Event',
+                    'model_id' => 21,
+                    'order' => 1,
+                    'file_name' => 'Logo-ct-mira.jpg',
+                    'url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/68481/Logo-ct-mira.jpg',
+                    'thumbnail_url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/68481/conversions/Logo-ct-mira-thumb.jpg',
+                    'updated_at' => '2025-04-07 18:56:58',
+                    'content_type' => 'image/jpeg',
+                    'collection' => 'images',
+                    'is_video' => false
                 ],
-                'created_at' => Carbon::now()->subDays(rand(60, 365))->toIso8601String(),
-                'updated_at' => Carbon::now()->subDays(rand(1, 59))->toIso8601String(),
-                'deleted_at' => null,
-                'listings' => $listings,
-                'media' => $eventMedia,
-                'listings_count' => count($listings),
-                'media_count' => count($eventMedia)
-            ];
-        }
+                'listings' => [
+                    [
+                        'id' => 10490,
+                        'event_id' => 21,
+                        'user_id' => 1,
+                        'is_approved' => true,
+                        'lot_number' => 1,
+                        'inventory_number' => null,
+                        'title' => 'QUANTITY OF ROLLER STANDS',
+                        'notes' => null,
+                        'description' => null,
+                        'category' => 'large_miscellaneous',
+                        'subcategory' => null,
+                        'sale_order' => 1,
+                        'requires_title' => false,
+                        'media' => [
+                            [
+                                'id' => 72053,
+                                'model_type' => 'App\\Models\\Listing',
+                                'model_id' => 10490,
+                                'order' => 1,
+                                'file_name' => 'media_ce23ff83-862d-4bfe-acee-57de51b706cf.jpg',
+                                'url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/72053/media_ce23ff83-862d-4bfe-acee-57de51b706cf.jpg',
+                                'thumbnail_url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/72053/conversions/media_ce23ff83-862d-4bfe-acee-57de51b706cf-thumb.jpg',
+                                'updated_at' => '2025-08-03 23:31:08',
+                                'content_type' => 'image/jpeg',
+                                'collection' => 'images',
+                                'is_video' => false
+                            ],
+                            [
+                                'id' => 72054,
+                                'model_type' => 'App\\Models\\Listing',
+                                'model_id' => 10490,
+                                'order' => 2,
+                                'file_name' => 'media_fb21c2d1-bf41-4bd3-a362-2ef5001b3387.jpg',
+                                'url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/72054/media_fb21c2d1-bf41-4bd3-a362-2ef5001b3387.jpg',
+                                'thumbnail_url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/72054/conversions/media_fb21c2d1-bf41-4bd3-a362-2ef5001b3387-thumb.jpg',
+                                'updated_at' => '2025-08-04 01:01:15',
+                                'content_type' => 'image/jpeg',
+                                'collection' => 'images',
+                                'is_video' => false
+                            ]
+                        ],
+                        'quality' => null,
+                        'estimate' => null
+                    ],
+                    [
+                        'id' => 10491,
+                        'event_id' => 21,
+                        'user_id' => 1,
+                        'is_approved' => true,
+                        'lot_number' => 2,
+                        'inventory_number' => null,
+                        'title' => 'VESTIL PORTABLE GANTRY CRANE',
+                        'notes' => null,
+                        'description' => '<p>4000# CAPACITY, C/W TROLLEY, CHAIN HOIST</p>',
+                        'category' => 'large_miscellaneous',
+                        'subcategory' => null,
+                        'sale_order' => 2,
+                        'requires_title' => false,
+                        'media' => [
+                            [
+                                'id' => 72055,
+                                'model_type' => 'App\\Models\\Listing',
+                                'model_id' => 10491,
+                                'order' => 1,
+                                'file_name' => 'gantry_crane_01.jpg',
+                                'url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/72055/gantry_crane_01.jpg',
+                                'thumbnail_url' => 'https://vapor-salesco-qa.s3.us-east-1.amazonaws.com/72055/conversions/gantry_crane_01-thumb.jpg',
+                                'updated_at' => '2025-08-04 01:10:15',
+                                'content_type' => 'image/jpeg',
+                                'collection' => 'images',
+                                'is_video' => false
+                            ]
+                        ],
+                        'quality' => null,
+                        'estimate' => null
+                    ],
+                    [
+                        'id' => 10492,
+                        'event_id' => 21,
+                        'user_id' => 1,
+                        'is_approved' => true,
+                        'lot_number' => 3,
+                        'inventory_number' => null,
+                        'title' => '2020 CATERPILLAR 315 HYDRAULIC EXCAVATOR',
+                        'notes' => 'Hour Meter: 4,523',
+                        'description' => '<p>Equipped with: Quick Coupler, 48" Bucket, A/C Cab, Aux Hydraulics</p>',
+                        'category' => 'excavators',
+                        'subcategory' => 'hydraulic_excavator',
+                        'sale_order' => 3,
+                        'requires_title' => false,
+                        'media' => [],
+                        'quality' => '2',
+                        'estimate' => '150000'
+                    ]
+                ],
+                'location' => [
+                    'description' => null,
+                    'address' => null,
+                    'city' => null,
+                    'state' => null,
+                    'postal_code' => null,
+                    'country_code' => 'US'
+                ]
+            ],
+            [
+                'id' => 22,
+                'status' => 'active',
+                'event_type' => 'online_auction',
+                'title' => 'Heavy Equipment & Truck Auction',
+                'description' => '<p>Monthly online auction featuring construction equipment, trucks, and more.</p>',
+                'start_time' => '2025-01-15T14:00:00+00:00',
+                'end_time' => '2025-01-18T22:00:00+00:00',
+                'hero_media' => null,
+                'listings' => [
+                    [
+                        'id' => 10493,
+                        'event_id' => 22,
+                        'user_id' => 1,
+                        'is_approved' => true,
+                        'lot_number' => 1,
+                        'inventory_number' => 'INV-2025-001',
+                        'title' => '2019 JOHN DEERE 544L WHEEL LOADER',
+                        'notes' => 'Hour Meter: 2,845',
+                        'description' => '<p>4WD, GP Bucket, Ride Control, Auto Greasing System</p>',
+                        'category' => 'wheel_loaders',
+                        'subcategory' => 'rubber_tire_wheel_loader',
+                        'sale_order' => 1,
+                        'requires_title' => false,
+                        'media' => [],
+                        'quality' => '1',
+                        'estimate' => '225000'
+                    ]
+                ],
+                'location' => [
+                    'description' => 'Online Auction - Equipment located across multiple sites',
+                    'address' => '123 Auction Way',
+                    'city' => 'Dallas',
+                    'state' => 'TX',
+                    'postal_code' => '75001',
+                    'country_code' => 'US'
+                ]
+            ]
+        ];
         
         $this->mockData = [
             'events' => $events,
@@ -129,41 +211,13 @@ class MockDataService
             'deletedMedia' => []
         ];
         
-        $this->lastModified = Carbon::now()->toIso8601String();
+        $this->lastModified = Carbon::now()->format('Y-m-d H:i:s');
         
         // Cache the data for 1 hour
         Cache::put('mock_catalog_data', [
             'data' => $this->mockData,
             'last_modified' => $this->lastModified
         ], 3600);
-    }
-    
-    /**
-     * Generate media entity
-     */
-    private function generateMedia(string $id, string $ownerType, string $ownerId): array
-    {
-        $mediaType = $this->randomFrom(['image', 'video', 'document', 'audio']);
-        
-        return [
-            'id' => $id,
-            'owner_type' => $ownerType,
-            'owner_id' => $ownerId,
-            'filename' => Str::random(20) . $this->getFileExtension($mediaType),
-            'original_filename' => $this->getRandomFileName($mediaType),
-            'mime_type' => $this->getMimeType($mediaType),
-            'file_size' => rand(100000, 10000000),
-            'media_type' => $mediaType,
-            'url' => $this->getMediaUrl($mediaType),
-            'thumbnail_url' => $mediaType === 'image' ? $this->getRandomImageUrl() : null,
-            'sort_order' => rand(1, 10),
-            'alt_text' => $this->getRandomAltText(),
-            'metadata' => $this->getMediaMetadata($mediaType),
-            'upload_status' => 'completed',
-            'created_at' => Carbon::now()->subDays(rand(30, 365))->toIso8601String(),
-            'updated_at' => Carbon::now()->subDays(rand(1, 29))->toIso8601String(),
-            'deleted_at' => null
-        ];
     }
     
     /**
@@ -182,65 +236,20 @@ class MockDataService
      */
     public function getChangesSince(string $since): array
     {
-        // Handle various date formats
-        try {
-            // Remove any extra spaces that might have been introduced
-            $since = trim($since);
-            // If the string contains a space that's not part of a timezone indicator, it might be malformed
-            $since = preg_replace('/\s+/', ' ', $since);
-            
-            $sinceDate = Carbon::parse($since);
-        } catch (\Exception $e) {
-            // Fallback to creating from format if parse fails
-            $sinceDate = Carbon::now()->subDay();
-        }
-        $changes = [
+        // For the mock, we'll return empty arrays as specified
+        return [
             'data' => [
                 'events' => [],
                 'listings' => [],
                 'media' => []
             ],
             'deletions' => [
-                'events' => $this->mockData['deletedEvents'],
-                'listings' => $this->mockData['deletedListings'],
-                'media' => $this->mockData['deletedMedia']
+                'events' => [],
+                'listings' => [],
+                'media' => []
             ],
             'last_modified' => $this->lastModified
         ];
-        
-        // Find changed events
-        foreach ($this->mockData['events'] as $event) {
-            $eventUpdated = Carbon::parse($event['updated_at']);
-            if ($eventUpdated->isAfter($sinceDate)) {
-                $changes['data']['events'][] = $event;
-            }
-            
-            // Find changed listings
-            foreach ($event['listings'] as $listing) {
-                $listingUpdated = Carbon::parse($listing['updated_at']);
-                if ($listingUpdated->isAfter($sinceDate)) {
-                    $changes['data']['listings'][] = $listing;
-                }
-                
-                // Find changed media for listings
-                foreach ($listing['media'] as $media) {
-                    $mediaUpdated = Carbon::parse($media['updated_at']);
-                    if ($mediaUpdated->isAfter($sinceDate)) {
-                        $changes['data']['media'][] = $media;
-                    }
-                }
-            }
-            
-            // Find changed media for events
-            foreach ($event['media'] as $media) {
-                $mediaUpdated = Carbon::parse($media['updated_at']);
-                if ($mediaUpdated->isAfter($sinceDate)) {
-                    $changes['data']['media'][] = $media;
-                }
-            }
-        }
-        
-        return $changes;
     }
     
     /**
@@ -252,144 +261,5 @@ class MockDataService
         // Add a small delay to ensure timestamp is different
         usleep(1000);
         $this->generateFreshData();
-    }
-    
-    // Helper methods
-    
-    private function randomFrom(array $items): string
-    {
-        return $items[array_rand($items)];
-    }
-    
-    private function getRandomProductName(): string
-    {
-        $adjectives = ['Vintage', 'Modern', 'Classic', 'Rare', 'Limited Edition', 'Antique', 'Contemporary'];
-        $items = ['Watch', 'Painting', 'Sculpture', 'Vase', 'Jewelry', 'Book', 'Coin', 'Stamp', 'Furniture'];
-        return $this->randomFrom($adjectives) . ' ' . $this->randomFrom($items);
-    }
-    
-    private function getRandomEventName(): string
-    {
-        $types = ['Fine Art', 'Jewelry', 'Collectibles', 'Antiques', 'Modern Art', 'Estate', 'Luxury'];
-        $suffixes = ['Auction', 'Sale', 'Event', 'Collection'];
-        return $this->randomFrom($types) . ' ' . $this->randomFrom($suffixes);
-    }
-    
-    private function getRandomDescription(): string
-    {
-        $descriptions = [
-            'A remarkable piece from a private collection.',
-            'Excellent condition with original documentation.',
-            'Rare find with authenticated provenance.',
-            'Museum-quality piece with detailed history.',
-            'Exceptional example of the artist\'s work.',
-            'Well-preserved item with minor wear consistent with age.',
-            'Important piece from the estate collection.'
-        ];
-        return $this->randomFrom($descriptions);
-    }
-    
-    private function getRandomLocation(): string
-    {
-        $cities = ['New York', 'London', 'Paris', 'Tokyo', 'Hong Kong', 'Geneva', 'Los Angeles'];
-        $states = ['NY', 'UK', 'FR', 'JP', 'HK', 'CH', 'CA'];
-        $index = array_rand($cities);
-        return $cities[$index] . ', ' . $states[$index];
-    }
-    
-    private function getRandomVenue(): string
-    {
-        $venues = ['Christie\'s', 'Sotheby\'s', 'Phillips', 'Bonhams', 'Heritage Auctions'];
-        return $this->randomFrom($venues) . ' Auction House';
-    }
-    
-    private function getRandomCategory(): string
-    {
-        $categories = ['Fine Art', 'Jewelry', 'Watches', 'Wine', 'Books', 'Coins', 'Stamps', 'Collectibles'];
-        return $this->randomFrom($categories);
-    }
-    
-    private function getRandomTerms(): string
-    {
-        return 'Standard auction terms and conditions apply. All sales are final. Buyer\'s premium applies to all lots.';
-    }
-    
-    private function getFileExtension(string $mediaType): string
-    {
-        $extensions = [
-            'image' => '.jpg',
-            'video' => '.mp4',
-            'document' => '.pdf',
-            'audio' => '.mp3'
-        ];
-        return $extensions[$mediaType] ?? '.bin';
-    }
-    
-    private function getRandomFileName(string $mediaType): string
-    {
-        $prefixes = [
-            'image' => 'IMG_',
-            'video' => 'VID_',
-            'document' => 'DOC_',
-            'audio' => 'AUD_'
-        ];
-        return ($prefixes[$mediaType] ?? 'FILE_') . rand(1000, 9999) . $this->getFileExtension($mediaType);
-    }
-    
-    private function getMimeType(string $mediaType): string
-    {
-        $mimeTypes = [
-            'image' => 'image/jpeg',
-            'video' => 'video/mp4',
-            'document' => 'application/pdf',
-            'audio' => 'audio/mpeg'
-        ];
-        return $mimeTypes[$mediaType] ?? 'application/octet-stream';
-    }
-    
-    private function getMediaUrl(string $mediaType): string
-    {
-        if ($mediaType === 'image') {
-            return $this->getRandomImageUrl();
-        }
-        return 'https://example.com/media/' . Str::random(20) . $this->getFileExtension($mediaType);
-    }
-    
-    private function getRandomImageUrl(): string
-    {
-        $width = rand(800, 1920);
-        $height = rand(600, 1080);
-        return "https://picsum.photos/{$width}/{$height}?random=" . rand(1, 10000);
-    }
-    
-    private function getRandomAltText(): string
-    {
-        $texts = [
-            'Product image',
-            'Detail view',
-            'Front view',
-            'Side view',
-            'Close-up',
-            'Overview'
-        ];
-        return $this->randomFrom($texts);
-    }
-    
-    private function getMediaMetadata(string $mediaType): array
-    {
-        $metadata = [];
-        
-        if ($mediaType === 'image') {
-            $metadata['width'] = rand(800, 4000);
-            $metadata['height'] = rand(600, 3000);
-        } elseif ($mediaType === 'video') {
-            $metadata['duration'] = rand(10, 300);
-            $metadata['width'] = 1920;
-            $metadata['height'] = 1080;
-        } elseif ($mediaType === 'audio') {
-            $metadata['duration'] = rand(30, 600);
-        }
-        
-        return $metadata;
     }
 }
