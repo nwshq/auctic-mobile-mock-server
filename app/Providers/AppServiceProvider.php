@@ -11,7 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register MockDataService as singleton
+        $this->app->singleton(\MockServer\Services\MockDataService::class, function () {
+            return new \MockServer\Services\MockDataService();
+        });
     }
 
     /**

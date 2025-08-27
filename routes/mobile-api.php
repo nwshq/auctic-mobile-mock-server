@@ -19,4 +19,10 @@ Route::get('/mobile/profile', \MockServer\Auth\JWToken\MockJWTtokenController::c
 // Mobile API v1 endpoints
 Route::prefix('mobile-api/v1')->group(function () {
     Route::get('/user', \MockServer\MobileApi\UserController::class);
+    
+    // Catalog sync endpoints
+    Route::prefix('catalog')->group(function () {
+        Route::get('/hydrate', [\MockServer\MobileApi\CatalogController::class, 'hydrate']);
+        Route::get('/sync', [\MockServer\MobileApi\CatalogController::class, 'sync']);
+    });
 });
