@@ -1,0 +1,442 @@
+{
+  "info": {
+    "name": "Auctic Mobile API Mock Server",
+    "description": "Static mock server collection for Auctic Mobile API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get Mobile Profile & JWT Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile",
+                "profile"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile/profile",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile",
+                    "profile"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"config\": {\n    \"apis\": {\n      \"pusher\": {\n        \"key\": \"mock-pusher-key-12345\",\n        \"authEndpoint\": \"/broadcasting/auth\",\n        \"region\": \"mt1\",\n        \"cluster\": \"us2\"\n      },\n      \"baseUrl\": \"https://api.auctic.com\",\n      \"mobileApiVersion\": \"v1\"\n    },\n    \"features\": {\n      \"bidding\": true,\n      \"watchlist\": true,\n      \"notifications\": true,\n      \"offlineBidding\": false,\n      \"liveAuction\": true,\n      \"onlineAuction\": true\n    },\n    \"settings\": {\n      \"maxImageUploadSize\": 10485760,\n      \"sessionTimeout\": 3600,\n      \"refreshInterval\": 300\n    }\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsIm5hbWUiOiJNb2NrIFVzZXIiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3MDQwNjcyMDAsImV4cCI6MTczNTY4OTYwMH0.mock_signature_abc123\",\n  \"expires_at\": \"2025-01-01T00:00:00.000000Z\",\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Mock User\",\n    \"email\": \"user@example.com\",\n    \"verified\": true\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mock_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile-api/v1/user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile-api",
+                "v1",
+                "user"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{mock_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile-api/v1/user",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile-api",
+                    "v1",
+                    "user"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": 1,\n  \"email\": \"user@example.com\",\n  \"name\": \"John Doe\",\n  \"phone\": \"+1234567890\",\n  \"company\": \"Acme Corp\",\n  \"avatar_url\": \"https://api.auctic.com/storage/avatars/user1.jpg\",\n  \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n  \"updated_at\": \"2024-01-15T10:30:00.000000Z\",\n  \"email_verified_at\": \"2024-01-01T00:30:00.000000Z\",\n  \"preferences\": {\n    \"notifications\": {\n      \"email\": true,\n      \"push\": true,\n      \"sms\": false\n    },\n    \"language\": \"en\",\n    \"currency\": \"USD\",\n    \"timezone\": \"America/New_York\"\n  },\n  \"permissions\": [\n    \"bid.create\",\n    \"bid.view\",\n    \"watchlist.manage\",\n    \"profile.edit\"\n  ],\n  \"features\": {\n    \"max_watchlist_items\": 100,\n    \"can_bid_online\": true,\n    \"can_bid_live\": true,\n    \"verified_bidder\": true\n  },\n  \"stats\": {\n    \"total_bids\": 42,\n    \"won_auctions\": 5,\n    \"watchlist_count\": 12\n  }\n}",
+              "cookie": []
+            },
+            {
+              "name": "Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile-api/v1/user",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile-api",
+                    "v1",
+                    "user"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Unauthenticated.\",\n  \"error\": \"Authentication required\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "Hydrate Catalog",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mock_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile-api/v1/catalog/hydrate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile-api",
+                "v1",
+                "catalog",
+                "hydrate"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{mock_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile-api/v1/catalog/hydrate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile-api",
+                    "v1",
+                    "catalog",
+                    "hydrate"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"timestamp\": \"2024-01-20T10:00:00Z\",\n  \"events\": [\n    {\n      \"id\": \"event_001\",\n      \"name\": \"January Heavy Equipment Auction\",\n      \"type\": \"live\",\n      \"status\": \"upcoming\",\n      \"start_date\": \"2024-02-01T09:00:00Z\",\n      \"end_date\": \"2024-02-01T17:00:00Z\",\n      \"location\": {\n        \"name\": \"Dallas Auction Yard\",\n        \"address\": \"1234 Auction Blvd\",\n        \"city\": \"Dallas\",\n        \"state\": \"TX\",\n        \"country\": \"USA\",\n        \"coordinates\": {\n          \"latitude\": 32.7767,\n          \"longitude\": -96.7970\n        }\n      },\n      \"listing_count\": 250,\n      \"featured\": true\n    },\n    {\n      \"id\": \"event_002\",\n      \"name\": \"Online Construction Equipment Sale\",\n      \"type\": \"online\",\n      \"status\": \"active\": \"Active\",\n      \"closed\": \"Closed\",\n      \"cancelled\": \"Cancelled\"\n    }\n  },\n  \"sync\": {\n    \"version\": \"1.0.0\",\n    \"last_modified\": \"2024-01-20T10:00:00Z\",\n    \"total_events\": 2,\n    \"total_listings\": 2,\n    \"total_categories\": 2\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sync Catalog",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mock_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile-api/v1/catalog/sync?since=2024-01-19T00:00:00Z",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile-api",
+                "v1",
+                "catalog",
+                "sync"
+              ],
+              "query": [
+                {
+                  "key": "since",
+                  "value": "2024-01-19T00:00:00Z",
+                  "description": "ISO 8601 timestamp to get changes since"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response - Changes Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{mock_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile-api/v1/catalog/sync?since=2024-01-19T00:00:00Z",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile-api",
+                    "v1",
+                    "catalog",
+                    "sync"
+                  ],
+                  "query": [
+                    {
+                      "key": "since",
+                      "value": "2024-01-19T00:00:00Z"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"timestamp\": \"2024-01-20T12:00:00Z\",\n  \"since\": \"2024-01-19T00:00:00Z\",\n  \"changes\": {\n    \"events\": {\n      \"added\": [\n        {\n          \"id\": \"event_003\",\n          \"name\": \"February Truck & Trailer Auction\",\n          \"type\": \"live\",\n          \"status\": \"upcoming\",\n          \"start_date\": \"2024-02-15T09:00:00Z\",\n          \"end_date\": \"2024-02-15T15:00:00Z\",\n          \"listing_count\": 85,\n          \"featured\": true\n        }\n      ],\n      \"updated\": [\n        {\n          \"id\": \"event_002\",\n          \"listing_count\": 195,\n          \"status\": \"active\"\n        }\n      ],\n      \"deleted\": []\n    },\n    \"listings\": {\n      \"added\": [\n        {\n          \"id\": \"lot_003\",\n          \"event_id\": \"event_002\",\n          \"lot_number\": \"B-22\",\n          \"title\": \"2018 Volvo L120H Wheel Loader\",\n          \"category\": \"loaders\",\n          \"subcategory\": \"wheel_loaders\",\n          \"manufacturer\": \"Volvo\",\n          \"model\": \"L120H\",\n          \"year\": 2018,\n          \"hours\": 3500,\n          \"condition\": \"good\",\n          \"starting_bid\": 95000,\n          \"current_bid\": null,\n          \"currency\": \"USD\"\n        }\n      ],\n      \"updated\": [\n        {\n          \"id\": \"lot_002\",\n          \"current_bid\": 52000,\n          \"bid_count\": 8,\n          \"reserve_met\": true\n        }\n      ],\n      \"deleted\": []\n    },\n    \"categories\": {\n      \"updated\": [\n        {\n          \"id\": \"loaders\",\n          \"count\": 39\n        }\n      ]\n    }\n  },\n  \"sync\": {\n    \"version\": \"1.0.0\",\n    \"last_modified\": \"2024-01-20T12:00:00Z\",\n    \"has_more\": false,\n    \"changes_count\": 4\n  }\n}",
+              "cookie": []
+            },
+            {
+              "name": "Success Response - No Changes",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{mock_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile-api/v1/catalog/sync?since=2024-01-20T12:00:00Z",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile-api",
+                    "v1",
+                    "catalog",
+                    "sync"
+                  ],
+                  "query": [
+                    {
+                      "key": "since",
+                      "value": "2024-01-20T12:00:00Z"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"timestamp\": \"2024-01-20T12:05:00Z\",\n  \"since\": \"2024-01-20T12:00:00Z\",\n  \"changes\": {\n    \"events\": {\n      \"added\": [],\n      \"updated\": [],\n      \"deleted\": []\n    },\n    \"listings\": {\n      \"added\": [],\n      \"updated\": [],\n      \"deleted\": []\n    },\n    \"categories\": {\n      \"updated\": []\n    }\n  },\n  \"sync\": {\n    \"version\": \"1.0.0\",\n    \"last_modified\": \"2024-01-20T12:00:00Z\",\n    \"has_more\": false,\n    \"changes_count\": 0\n  }\n}"
+            },
+            {
+              "name": "Bad Request - Missing Since Parameter",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{mock_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/mobile-api/v1/catalog/sync",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "mobile-api",
+                    "v1",
+                    "catalog",
+                    "sync"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The since field is required.\",\n  \"errors\": {\n    \"since\": [\"The since field is required.\"]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "mock_token",
+      "value": "mock_pat_1234567890abcdef1234567890abcdef12345678",
+      "type": "string"
+    }
+  ]
+}
