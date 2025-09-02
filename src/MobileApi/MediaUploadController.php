@@ -5,12 +5,16 @@ namespace MockServer\MobileApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use MockServer\Services\MediaStorageService;
 
 class MediaUploadController
 {
-    private array $uploadMetadata = [];
-    private array $fileData = [];
-    private array $listingMedia = [];
+    private MediaStorageService $mediaStorageService;
+    
+    public function __construct(MediaStorageService $mediaStorageService)
+    {
+        $this->mediaStorageService = $mediaStorageService;
+    }
     
     /**
      * Step 1: Request upload URL for media
@@ -32,8 +36,8 @@ class MediaUploadController
             $storageKey = 'temp-' . Str::uuid();
             $uploadId = Str::uuid();
             
-            // Store metadata in session for later validation
-            session()->put("upload_metadata.{$storageKey}", [
+            // Store metadata using MediaStorageService for persistence
+            $this->mediaStorageService->storeUploadMetadata($storageKey, [
                 'identifier' => $item['identifier'],
                 'filename' => $item['filename'],
                 'content_type' => $item['content_type'],
@@ -61,25 +65,20 @@ class MediaUploadController
      */
     public function mockS3Upload(Request $request, string $uploadId)
     {
-        // Find the metadata by upload ID
-        $storageKey = null;
-        $metadata = null;
+        // Find the metadata by upload ID using MediaStorageService
+        $storageKey = $this->mediaStorageService->getStorageKeyByUploadId($uploadId);
         
-        foreach (session()->all() as $key => $value) {
-            if (str_starts_with($key, 'upload_metadata.') && is_array($value)) {
-                if (isset($value['upload_id']) && $value['upload_id'] === $uploadId) {
-                    $storageKey = str_replace('upload_metadata.', '', $key);
-                    $metadata = $value;
-                    break;
-                }
-            }
-        }
-        
-        if (!$metadata) {
+        if (!$storageKey) {
             return response()->json(['error' => 'Invalid upload ID'], 404);
         }
         
-        // Store file data in session (in real app, would store in S3 or filesystem)
+        $metadata = $this->mediaStorageService->getUploadMetadata($storageKey);
+        
+        if (!$metadata) {
+            return response()->json(['error' => 'Upload metadata not found'], 404);
+        }
+        
+        // Store file data using MediaStorageService
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $path = Storage::disk('local')->putFileAs(
@@ -88,7 +87,7 @@ class MediaUploadController
                 $uploadId . '_' . $metadata['filename']
             );
             
-            session()->put("file_data.{$storageKey}", [
+            $this->mediaStorageService->storeFileData($storageKey, [
                 'path' => $path,
                 'filename' => $metadata['filename'],
                 'mime_type' => $metadata['content_type'],
@@ -100,7 +99,7 @@ class MediaUploadController
             $path = 'mock-uploads/' . $uploadId . '_' . $metadata['filename'];
             Storage::disk('local')->put($path, $content);
             
-            session()->put("file_data.{$storageKey}", [
+            $this->mediaStorageService->storeFileData($storageKey, [
                 'path' => $path,
                 'filename' => $metadata['filename'],
                 'mime_type' => $metadata['content_type'],
@@ -132,22 +131,16 @@ class MediaUploadController
         $collection = $request->input('collection');
         
         foreach ($request->input('media') as $media) {
-            $fileData = session()->get("file_data.{$media['storage_key']}");
+            $fileData = $this->mediaStorageService->getFileData($media['storage_key']);
             
             if ($fileData) {
-                // Store association in session (in real app, would store in database)
-                $mediaKey = "listing_media.{$listingId}.{$collection}";
-                $existingMedia = session()->get($mediaKey, []);
-                
-                $existingMedia[] = array_merge($fileData, [
-                    'id' => count($existingMedia) + 1,
-                    'storage_key' => $media['storage_key'],
-                    'created_at' => now()->toIso8601String(),
-                    'updated_at' => now()->toIso8601String(),
-                    'uuid' => Str::uuid(),
-                ]);
-                
-                session()->put($mediaKey, $existingMedia);
+                // Store association using MediaStorageService
+                $this->mediaStorageService->associateMediaWithListing(
+                    $listingId,
+                    $collection,
+                    $media['storage_key'],
+                    $fileData
+                );
             }
         }
         
@@ -159,7 +152,7 @@ class MediaUploadController
      */
     public function getListingMedia(Request $request, string $listingId, string $collection)
     {
-        $mediaItems = session()->get("listing_media.{$listingId}.{$collection}", []);
+        $mediaItems = $this->mediaStorageService->getListingMedia($listingId, $collection);
         $baseUrl = env('MEDIA_BASE_URL', 'https://bucket.s3.amazonaws.com');
         
         $response = [];
