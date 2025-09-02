@@ -22,7 +22,7 @@ Route::prefix('mobile-api/v1')->group(function () {
     
     // Catalog sync endpoints
     Route::prefix('catalog')->group(function () {
-        Route::get('/hydrate', [\MockServer\MobileApi\CatalogController::class, 'hydrate']);
-        Route::get('/sync', [\MockServer\MobileApi\CatalogController::class, 'sync']);
+        Route::get('/hydrate', [\MockServer\MobileApi\CatalogController::class, 'hydrate'])->name('catalog.hydrate');
+        Route::get('/sync', [\MockServer\MobileApi\CatalogController::class, 'sync'])->name('catalog.sync');
     });
 });

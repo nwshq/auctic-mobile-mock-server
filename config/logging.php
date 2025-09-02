@@ -122,6 +122,14 @@ return [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
         ],
+        
+        'test_scenarios' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/test-scenarios.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 7,
+            'replace_placeholders' => true,
+        ],
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),

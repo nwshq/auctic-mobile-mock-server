@@ -17,7 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Add Test Scenario Middleware to API groups
+        $middleware->group('api', [
+            \MockServer\TestScenarios\Middleware\TestScenarioMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

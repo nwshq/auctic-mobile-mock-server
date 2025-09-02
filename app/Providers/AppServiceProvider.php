@@ -15,6 +15,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\MockServer\Services\MockDataService::class, function () {
             return new \MockServer\Services\MockDataService();
         });
+        
+        // Register Test Scenario Service Provider
+        $this->app->register(\MockServer\TestScenarios\Providers\TestScenarioServiceProvider::class);
     }
 
     /**
