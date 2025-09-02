@@ -30,24 +30,35 @@ class TestScenarioController extends Controller
         ]);
 
         $scenario = $request->input('scenario');
+        $isGeneric = false;
         
-        // Check if scenario exists
+        // Check if scenario exists, if not use generic scenario
         if (!$this->scenarioService->scenarioExists($scenario)) {
-            return response()->json([
-                'error' => 'TSE003',
-                'message' => 'Unknown scenario: ' . $scenario
-            ], 400);
+            // Use a generic scenario instead of returning error
+            $scenario = 'generic_scenario';
+            $isGeneric = true;
+            
+            // Ensure generic scenario exists, create if needed
+            if (!$this->scenarioService->scenarioExists($scenario)) {
+                // Fall back to 'default' if generic_scenario doesn't exist
+                $scenario = 'default';
+            }
         }
 
         // Create new session
         $session = $this->sessionService->createSession(
             $scenario,
-            $request->input('metadata', [])
+            array_merge(
+                $request->input('metadata', []),
+                ['requested_scenario' => $request->input('scenario')]
+            )
         );
 
         return response()->json([
             'session_id' => $session['session_id'],
             'scenario' => $session['scenario'],
+            'is_generic' => $isGeneric,
+            'requested_scenario' => $request->input('scenario'),
             'expires_at' => $session['expires_at']
         ], 201);
     }
