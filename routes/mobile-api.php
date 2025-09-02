@@ -25,6 +25,9 @@ Route::prefix('mobile-api/v1')->group(function () {
         Route::get('/hydrate', [\MockServer\MobileApi\CatalogController::class, 'hydrate'])->name('catalog.hydrate');
         Route::get('/sync', [\MockServer\MobileApi\CatalogController::class, 'sync'])->name('catalog.sync');
         
+        // Changes submission endpoint
+        Route::post('/changes', [\MockServer\MobileApi\ChangesController::class, 'submitChanges'])->name('catalog.changes');
+        
         // Media upload endpoints
         Route::post('/request-upload', [\MockServer\MobileApi\MediaUploadController::class, 'requestUpload'])->name('catalog.request-upload');
     });
