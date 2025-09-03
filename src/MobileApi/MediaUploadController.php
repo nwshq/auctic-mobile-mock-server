@@ -62,6 +62,7 @@ class MediaUploadController
     /**
      * Mock S3 upload endpoint
      * This simulates S3's PUT endpoint for file uploads
+     * Supports both multipart/form-data and raw binary uploads
      */
     public function mockS3Upload(Request $request, string $uploadId)
     {
@@ -78,42 +79,46 @@ class MediaUploadController
             return response()->json(['error' => 'Upload metadata not found'], 404);
         }
         
+        // Create mock-uploads directory if it doesn't exist
+        if (!Storage::disk('local')->exists('mock-uploads')) {
+            Storage::disk('local')->makeDirectory('mock-uploads');
+        }
+        
+        $path = 'mock-uploads/' . $uploadId . '_' . $metadata['filename'];
+        $content = '';
+        $size = 0;
+        
         // Store file data using MediaStorageService
         if ($request->hasFile('file')) {
+            // Handle multipart/form-data upload
             $file = $request->file('file');
-            $path = Storage::disk('local')->putFileAs(
+            Storage::disk('local')->putFileAs(
                 'mock-uploads',
                 $file,
                 $uploadId . '_' . $metadata['filename']
             );
-            
-            $this->mediaStorageService->storeFileData($storageKey, [
-                'path' => $path,
-                'filename' => $metadata['filename'],
-                'mime_type' => $metadata['content_type'],
-                'size' => $file->getSize(),
-            ]);
+            $size = $file->getSize();
+            $content = file_get_contents($file->getRealPath());
         } else {
-            // Handle raw body upload (like S3 does)
+            // Handle raw binary upload (like S3 does)
             $content = $request->getContent();
-            $path = 'mock-uploads/' . $uploadId . '_' . $metadata['filename'];
             Storage::disk('local')->put($path, $content);
-            
-            $this->mediaStorageService->storeFileData($storageKey, [
-                'path' => $path,
-                'filename' => $metadata['filename'],
-                'mime_type' => $metadata['content_type'],
-                'size' => strlen($content),
-            ]);
+            $size = strlen($content);
         }
         
-        // Return S3-like response
-        return response()->json([
-            'ETag' => '"' . md5($uploadId) . '"',
-            'Location' => env('APP_URL') . '/storage/' . $path,
-            'Key' => $uploadId,
-            'Bucket' => 'mock-bucket',
-        ], 200);
+        $this->mediaStorageService->storeFileData($storageKey, [
+            'path' => $path,
+            'filename' => $metadata['filename'],
+            'mime_type' => $metadata['content_type'],
+            'size' => $size,
+        ]);
+        
+        // Return a simple 200 OK response like S3 does
+        // S3 returns minimal response for PUT operations
+        return response('', 200)
+            ->header('ETag', '"' . md5($content) . '"')
+            ->header('x-amz-request-id', $uploadId)
+            ->header('x-amz-id-2', base64_encode($uploadId));
     }
     
     /**

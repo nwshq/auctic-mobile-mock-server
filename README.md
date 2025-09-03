@@ -7,6 +7,28 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Auctic Mobile Mock Server
+
+This is a mock server for testing the Auctic mobile application. It provides endpoints for media uploads, catalog management, and other mobile app functionality.
+
+## Configuration Requirements
+
+### PHP Settings for Media Upload
+
+To handle media file uploads properly, you need to configure the following PHP settings in your Herd or PHP configuration:
+
+- **`upload_max_filesize`**: Set to at least `50M` (or higher based on your needs)
+- **`post_max_size`**: Set to at least `50M` (or higher, should be >= upload_max_filesize)
+- **`memory_limit`**: Recommended `256M` or higher
+- **`max_execution_time`**: Consider increasing to `300` for large uploads
+
+If you encounter a **413 Request Entity Too Large** error during file uploads, these settings need to be increased.
+
+#### For Laravel Herd Users:
+1. Open Herd's PHP configuration
+2. Update the values mentioned above
+3. Restart PHP services
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

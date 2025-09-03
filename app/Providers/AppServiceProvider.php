@@ -16,6 +16,11 @@ class AppServiceProvider extends ServiceProvider
             return new \MockServer\Services\MockDataService();
         });
         
+        // Register MediaStorageService as singleton
+        $this->app->singleton(\MockServer\Services\MediaStorageService::class, function () {
+            return new \MockServer\Services\MediaStorageService();
+        });
+        
         // Register Test Scenario Service Provider
         $this->app->register(\MockServer\TestScenarios\Providers\TestScenarioServiceProvider::class);
     }
