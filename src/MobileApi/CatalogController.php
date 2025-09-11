@@ -81,7 +81,7 @@ class CatalogController
                     'consignments' => 'Consignments'
                 ]
             ],
-            'fallback_image_url' => 'https://d4e0oulzfmymj.cloudfront.net/8a7dbd6c-0e63-4c62-a354-33f53ad9ab5b/assets/no_img.png',
+            'fallback_image_url' => 'https://placehold.co/600x400/orange/white',
             'last_modified' => '2025-08-27 20:24:35'
         ];
         
