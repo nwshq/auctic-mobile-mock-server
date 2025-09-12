@@ -24,8 +24,7 @@ class TestScenarioMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Only apply middleware if test scenarios are enabled
-        if (!config('test-scenarios.enabled', false)) {
+        if (!config('scenarios.enabled', false)) {
             return $next($request);
         }
 
@@ -43,7 +42,7 @@ class TestScenarioMiddleware
 
         // Load active scenario from session
         $session = $this->sessionService->getSession($sessionId);
-        
+
         if (!$session) {
             Log::warning('Test scenario session not found or expired', ['session_id' => $sessionId]);
             return $next($request);
@@ -290,7 +289,7 @@ class TestScenarioMiddleware
         }
         
         // Add test headers for debugging
-        if (config('test-scenarios.add_debug_headers', false)) {
+        if (config('scenarios.debug.headers', false)) {
             $response->headers->set('X-Test-Scenario', $session['scenario']);
             $response->headers->set('X-Test-Session-ID', $session['session_id']);
         }
