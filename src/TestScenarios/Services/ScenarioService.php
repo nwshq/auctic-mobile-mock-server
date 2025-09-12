@@ -36,11 +36,15 @@ class ScenarioService
 
     /**
      * Get a specific scenario configuration
-     * Always returns default scenario
      */
     public function getScenario(string $scenarioName): ?array
     {
-        // Always return default scenario regardless of input
+        // Return the requested scenario if it exists
+        if (isset($this->scenarios[$scenarioName])) {
+            return $this->scenarios[$scenarioName];
+        }
+        
+        // Fall back to default scenario
         return $this->scenarios['default'] ?? [
             'name' => 'Default Scenario',
             'description' => 'Default mock server responses',
@@ -50,16 +54,21 @@ class ScenarioService
 
     /**
      * Get all available scenarios
-     * Returns only the default scenario
      */
     public function getAllScenarios(): array
     {
-        return [[
-            'name' => 'default',
-            'display_name' => 'Default Scenario',
-            'description' => 'Default mock server responses',
-            'endpoints' => []
-        ]];
+        $result = [];
+        
+        foreach ($this->scenarios as $key => $scenario) {
+            $result[] = [
+                'name' => $key,
+                'display_name' => $scenario['name'] ?? $key,
+                'description' => $scenario['description'] ?? '',
+                'endpoints' => array_keys($scenario['responses'] ?? [])
+            ];
+        }
+        
+        return $result;
     }
 
     /**
@@ -88,12 +97,10 @@ class ScenarioService
 
     /**
      * Check if a scenario exists
-     * Always returns true for compatibility
      */
     public function scenarioExists(string $scenario): bool
     {
-        // Always return true since we only use default scenario
-        return true;
+        return isset($this->scenarios[$scenario]);
     }
 
     /**

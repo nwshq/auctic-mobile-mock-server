@@ -101,6 +101,21 @@ The mock server includes a sophisticated test scenario system designed for Maest
 - `POST /test-scenarios/reset` - Reset test session
 - `GET /test-scenarios/available` - List all available scenarios
 
+### Available Scenarios
+
+#### Default Scenario
+- **Name**: `default`
+- **Description**: Standard mock server behavior with no modifications
+- **Effects**: None
+
+#### Camera Performance Test
+- **Name**: `camera-performance-test`
+- **Description**: Simulates performance testing conditions for camera features
+- **Effects**:
+  - 5-second delay on `/catalog/changes`, `/catalog/request-upload`, and S3 upload endpoints
+  - Extensive request logging for debugging
+  - Fixed `last_modified` timestamp (2025-08-27 20:24:35) on `/catalog/hydrate`
+
 ### Example Maestro Integration
 ```yaml
 # Activate test scenario
@@ -108,15 +123,133 @@ The mock server includes a sophisticated test scenario system designed for Maest
     url: "${MOCK_SERVER_URL}/test-scenarios/activate"
     method: POST
     body:
-      scenario: "empty_catalog"
+      scenario: "camera-performance-test"
     saveResponse: testSession
 
 # Launch app with session
 - launchApp:
     arguments:
       TEST_SESSION_ID: "${testSession.session_id}"
-      TEST_SCENARIO: "empty_catalog"
+      TEST_SCENARIO: "camera-performance-test"
 ```
+
+## Adding New Test Scenarios
+
+The mock server uses the **Strategy Pattern** to handle different test scenarios. Follow these steps to add a new scenario:
+
+### Step 1: Create a Strategy Class
+
+Create a new strategy class in `src/TestScenarios/Strategies/`:
+
+```php
+<?php
+
+namespace MockServer\TestScenarios\Strategies;
+
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class YourScenarioStrategy implements ScenarioStrategyInterface
+{
+    public function processRequest(Request $request, array $config, array $session): array
+    {
+        // Add pre-processing logic (delays, logging, etc.)
+        // Example: sleep(3); // Add 3-second delay
+        
+        return [
+            'continue' => true,
+            'modifications' => []
+        ];
+    }
+    
+    public function processResponse(Response $response, array $config, array $session): Response
+    {
+        // Modify the response if needed
+        // Example: Add custom headers, modify JSON data, etc.
+        
+        return $response;
+    }
+    
+    public function shouldOverrideResponse(array $config): bool
+    {
+        // Return true if you want to completely replace the controller response
+        return false;
+    }
+    
+    public function generateResponse(Request $request, array $config, array $session): ?Response
+    {
+        // Generate a custom response (only if shouldOverrideResponse returns true)
+        return null;
+    }
+}
+```
+
+### Step 2: Register the Strategy
+
+Add your strategy to the factory in `src/TestScenarios/Strategies/ScenarioStrategyFactory.php`:
+
+```php
+private static array $strategies = [
+    'default' => DefaultScenarioStrategy::class,
+    'camera-performance-test' => CameraPerformanceStrategy::class,
+    'your-scenario' => YourScenarioStrategy::class, // Add this line
+];
+```
+
+### Step 3: Configure Endpoints
+
+Add configuration in `config/test-scenarios/catalog-scenarios.php`:
+
+```php
+'your-scenario' => [
+    'name' => 'Your Scenario Name',
+    'description' => 'Description of what this scenario does',
+    'responses' => [
+        'catalog.hydrate' => [
+            'type' => 'dynamic',
+            'generator' => \MockServer\TestScenarios\Strategies\YourScenarioStrategy::class,
+            'parameters' => [
+                // Add any parameters your strategy needs
+                'delay' => 3,
+                'custom_param' => 'value'
+            ]
+        ],
+        // Add more endpoints as needed
+    ]
+]
+```
+
+### Step 4: Test Your Scenario
+
+Create a test file in `tests/Feature/TestScenarios/`:
+
+```php
+public function test_your_scenario_works()
+{
+    // Activate your scenario
+    $response = $this->postJson('/api/test-scenarios/activate', [
+        'scenario' => 'your-scenario'
+    ]);
+    
+    $sessionId = $response->json('session_id');
+    
+    // Test that your scenario effects are applied
+    $testResponse = $this->getJson('/your-endpoint', [
+        'X-Test-Session-ID' => $sessionId
+    ]);
+    
+    // Assert expected behavior
+    $testResponse->assertStatus(200);
+}
+```
+
+### Common Strategy Use Cases
+
+1. **Network Conditions**: Add delays, timeouts, or connection failures
+2. **Error Simulation**: Return specific error codes and messages
+3. **Data Variations**: Return different data sets (empty, partial, full)
+4. **Performance Testing**: Add logging, delays, and monitoring
+5. **Security Testing**: Simulate authentication failures or permission issues
 
 ## Development
 

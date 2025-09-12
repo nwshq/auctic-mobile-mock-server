@@ -18,24 +18,28 @@ class TestScenarioController extends Controller
     /**
      * POST /test-scenarios/activate
      * Activate a test scenario and create a new session
-     * Always uses default scenario
      */
     public function activate(Request $request): JsonResponse
     {
         $request->validate([
-            'scenario' => 'string',
+            'scenario' => 'required|string',
             'metadata' => 'array',
             'metadata.test_name' => 'string',
             'metadata.test_suite' => 'string',
             'metadata.maestro_flow' => 'string'
         ]);
 
-        // Always use default scenario
-        $scenario = 'default';
-        $requestedScenario = $request->input('scenario', 'default');
-        $isGeneric = ($requestedScenario !== 'default');
+        $requestedScenario = $request->input('scenario');
+        $scenario = $requestedScenario;
+        $isGeneric = false;
+        
+        // Check if scenario exists, if not use default
+        if (!$this->scenarioService->scenarioExists($scenario)) {
+            $scenario = 'default';
+            $isGeneric = true;
+        }
 
-        // Create new session with default scenario
+        // Create new session
         $session = $this->sessionService->createSession(
             $scenario,
             array_merge(
@@ -89,7 +93,6 @@ class TestScenarioController extends Controller
     /**
      * POST /test-scenarios/switch
      * Switch to a different scenario mid-test
-     * Always remains on default scenario
      */
     public function switch(Request $request): JsonResponse
     {
@@ -106,8 +109,17 @@ class TestScenarioController extends Controller
             'scenario' => 'required|string'
         ]);
 
-        // Always use default scenario
-        $session = $this->sessionService->switchScenario($sessionId, 'default');
+        $newScenario = $request->input('scenario');
+        
+        // Check if scenario exists
+        if (!$this->scenarioService->scenarioExists($newScenario)) {
+            return response()->json([
+                'error' => 'TSE003',
+                'message' => 'Unknown scenario: ' . $newScenario
+            ], 400);
+        }
+
+        $session = $this->sessionService->switchScenario($sessionId, $newScenario);
         
         if (!$session) {
             return response()->json([
@@ -118,7 +130,7 @@ class TestScenarioController extends Controller
 
         return response()->json([
             'session_id' => $session['session_id'],
-            'scenario' => 'default',
+            'scenario' => $session['scenario'],
             'message' => 'Scenario switched successfully'
         ]);
     }

@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use MockServer\TestScenarios\Services\TestSessionService;
 use MockServer\TestScenarios\Services\ScenarioService;
 use MockServer\TestScenarios\Services\ResponseGeneratorService;
+use MockServer\TestScenarios\Strategies\ScenarioStrategyFactory;
 use Illuminate\Support\Facades\Log;
 
 class TestScenarioMiddleware
@@ -68,32 +69,52 @@ class TestScenarioMiddleware
         // Get endpoint from route
         $endpoint = $this->getEndpointIdentifier($request);
         
-        // Check if we have a response configuration for this endpoint
+        // Get the strategy for this scenario
+        try {
+            $strategy = ScenarioStrategyFactory::getStrategy($scenario);
+        } catch (\Exception $e) {
+            Log::error('Failed to get scenario strategy', [
+                'scenario' => $scenario,
+                'error' => $e->getMessage()
+            ]);
+            // Fall back to normal processing
+            return $next($request);
+        }
+        
+        // Get response configuration for this endpoint
         $responseConfig = $this->scenarioService->getResponseConfig($scenario, $endpoint);
         
-        if ($responseConfig) {
-            // Log the test scenario activity
-            Log::channel('test_scenarios')->info('Processing test scenario request', [
-                'session_id' => $sessionId,
-                'scenario' => $scenario,
-                'endpoint' => $endpoint,
-                'request_count' => $session['state']['request_count'] ?? 0
-            ]);
-
-            // Check if we should generate a custom response
-            if ($this->shouldOverrideResponse($responseConfig)) {
-                return $this->generateScenarioResponse($request, $responseConfig, $session);
+        if (!$responseConfig) {
+            // No configuration for this endpoint, use normal flow
+            return $next($request);
+        }
+        
+        // Log the test scenario activity
+        Log::channel('test_scenarios')->info('Processing test scenario request', [
+            'session_id' => $sessionId,
+            'scenario' => $scenario,
+            'endpoint' => $endpoint,
+            'request_count' => $session['state']['request_count'] ?? 0,
+            'strategy' => get_class($strategy)
+        ]);
+        
+        // Let the strategy process the request
+        $requestResult = $strategy->processRequest($request, $responseConfig, $session);
+        
+        // Check if strategy wants to override the response completely
+        if ($strategy->shouldOverrideResponse($responseConfig)) {
+            $generatedResponse = $strategy->generateResponse($request, $responseConfig, $session);
+            if ($generatedResponse) {
+                return $generatedResponse;
             }
         }
-
-        // Process request normally but with potential modifications
+        
+        // Continue to controller
         $response = $next($request);
         
-        // Apply response variations if configured
-        if ($responseConfig) {
-            $response = $this->applyResponseVariations($response, $responseConfig, $session);
-        }
-
+        // Let the strategy process the response
+        $response = $strategy->processResponse($response, $responseConfig, $session);
+        
         return $response;
     }
 
