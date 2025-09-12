@@ -91,13 +91,26 @@ class CameraPerformanceTest extends TestCase
     public function test_camera_performance_adds_logging()
     {
         // Mock the Log facade to capture log calls
+        // First mock the channel call for test_scenarios
+        Log::shouldReceive('channel')
+            ->with('test_scenarios')
+            ->andReturnSelf();
+        
+        // Mock the info method on the test_scenarios channel
+        Log::shouldReceive('info')
+            ->withArgs(function ($message, $context) {
+                return str_contains($message, 'Processing test scenario request');
+            })
+            ->once();
+        
+        // Mock the actual logging from CameraPerformanceStrategy
         Log::shouldReceive('info')
             ->withArgs(function ($message, $context) {
                 return str_contains($message, '[UPLOAD-REQUEST-IN]') ||
                        str_contains($message, '[CHANGES-REQUEST]') ||
                        str_contains($message, '[S3-UPLOAD]');
             })
-            ->once();
+            ->once(); 
         
         // Activate camera performance scenario
         $activateResponse = $this->postJson('/api/test-scenarios/activate', [

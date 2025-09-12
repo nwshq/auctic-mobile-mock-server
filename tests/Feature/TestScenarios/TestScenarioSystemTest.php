@@ -35,10 +35,12 @@ class TestScenarioSystemTest extends TestCase
 
         $scenarios = $response->json('scenarios');
         
-        // Should only contain default scenario
-        $this->assertCount(1, $scenarios);
+        // Should contain default and camera-performance-test scenarios
+        $this->assertCount(2, $scenarios);
         $this->assertEquals('default', $scenarios[0]['name']);
         $this->assertEquals('Default Scenario', $scenarios[0]['display_name']);
+        $this->assertEquals('camera-performance-test', $scenarios[1]['name']);
+        $this->assertEquals('Camera Performance Test', $scenarios[1]['display_name']);
     }
 
     /**
@@ -116,20 +118,21 @@ class TestScenarioSystemTest extends TestCase
     {
         // Activate initial scenario
         $activateResponse = $this->postJson('/api/test-scenarios/activate', [
-            'scenario' => 'any'
+            'scenario' => 'default'
         ]);
         $sessionId = $activateResponse->json('session_id');
 
-        // Try to switch to different scenario
+        // Try to switch to camera-performance-test scenario
         $response = $this->postJson('/api/test-scenarios/switch', 
-            ['scenario' => 'another_scenario'],
+            ['scenario' => 'camera-performance-test'],
             ['X-Test-Session-ID' => $sessionId]
         );
 
+        // Should switch to camera-performance-test successfully
         $response->assertStatus(200)
             ->assertJson([
                 'session_id' => $sessionId,
-                'scenario' => 'default',
+                'scenario' => 'camera-performance-test',
                 'message' => 'Scenario switched successfully'
             ]);
     }
