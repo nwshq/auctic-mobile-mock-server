@@ -18,39 +18,29 @@ class TestScenarioController extends Controller
     /**
      * POST /test-scenarios/activate
      * Activate a test scenario and create a new session
+     * Always uses default scenario
      */
     public function activate(Request $request): JsonResponse
     {
         $request->validate([
-            'scenario' => 'required|string',
+            'scenario' => 'string',
             'metadata' => 'array',
             'metadata.test_name' => 'string',
             'metadata.test_suite' => 'string',
             'metadata.maestro_flow' => 'string'
         ]);
 
-        $scenario = $request->input('scenario');
-        $isGeneric = false;
-        
-        // Check if scenario exists, if not use generic scenario
-        if (!$this->scenarioService->scenarioExists($scenario)) {
-            // Use a generic scenario instead of returning error
-            $scenario = 'generic_scenario';
-            $isGeneric = true;
-            
-            // Ensure generic scenario exists, create if needed
-            if (!$this->scenarioService->scenarioExists($scenario)) {
-                // Fall back to 'default' if generic_scenario doesn't exist
-                $scenario = 'default';
-            }
-        }
+        // Always use default scenario
+        $scenario = 'default';
+        $requestedScenario = $request->input('scenario', 'default');
+        $isGeneric = ($requestedScenario !== 'default');
 
-        // Create new session
+        // Create new session with default scenario
         $session = $this->sessionService->createSession(
             $scenario,
             array_merge(
                 $request->input('metadata', []),
-                ['requested_scenario' => $request->input('scenario')]
+                ['requested_scenario' => $requestedScenario]
             )
         );
 
@@ -58,7 +48,7 @@ class TestScenarioController extends Controller
             'session_id' => $session['session_id'],
             'scenario' => $session['scenario'],
             'is_generic' => $isGeneric,
-            'requested_scenario' => $request->input('scenario'),
+            'requested_scenario' => $requestedScenario,
             'expires_at' => $session['expires_at']
         ], 201);
     }
@@ -99,6 +89,7 @@ class TestScenarioController extends Controller
     /**
      * POST /test-scenarios/switch
      * Switch to a different scenario mid-test
+     * Always remains on default scenario
      */
     public function switch(Request $request): JsonResponse
     {
@@ -115,17 +106,8 @@ class TestScenarioController extends Controller
             'scenario' => 'required|string'
         ]);
 
-        $newScenario = $request->input('scenario');
-        
-        // Check if scenario exists
-        if (!$this->scenarioService->scenarioExists($newScenario)) {
-            return response()->json([
-                'error' => 'TSE003',
-                'message' => 'Unknown scenario: ' . $newScenario
-            ], 400);
-        }
-
-        $session = $this->sessionService->switchScenario($sessionId, $newScenario);
+        // Always use default scenario
+        $session = $this->sessionService->switchScenario($sessionId, 'default');
         
         if (!$session) {
             return response()->json([
@@ -136,7 +118,7 @@ class TestScenarioController extends Controller
 
         return response()->json([
             'session_id' => $session['session_id'],
-            'scenario' => $session['scenario'],
+            'scenario' => 'default',
             'message' => 'Scenario switched successfully'
         ]);
     }

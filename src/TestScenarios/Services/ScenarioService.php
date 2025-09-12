@@ -3,7 +3,6 @@
 namespace MockServer\TestScenarios\Services;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Config;
 
 class ScenarioService
 {
@@ -37,29 +36,30 @@ class ScenarioService
 
     /**
      * Get a specific scenario configuration
+     * Always returns default scenario
      */
     public function getScenario(string $scenarioName): ?array
     {
-        return $this->scenarios[$scenarioName] ?? null;
+        // Always return default scenario regardless of input
+        return $this->scenarios['default'] ?? [
+            'name' => 'Default Scenario',
+            'description' => 'Default mock server responses',
+            'responses' => []
+        ];
     }
 
     /**
      * Get all available scenarios
+     * Returns only the default scenario
      */
     public function getAllScenarios(): array
     {
-        $result = [];
-        
-        foreach ($this->scenarios as $key => $scenario) {
-            $result[] = [
-                'name' => $key,
-                'display_name' => $scenario['name'] ?? $key,
-                'description' => $scenario['description'] ?? '',
-                'endpoints' => array_keys($scenario['responses'] ?? [])
-            ];
-        }
-        
-        return $result;
+        return [[
+            'name' => 'default',
+            'display_name' => 'Default Scenario',
+            'description' => 'Default mock server responses',
+            'endpoints' => []
+        ]];
     }
 
     /**
@@ -88,14 +88,17 @@ class ScenarioService
 
     /**
      * Check if a scenario exists
+     * Always returns true for compatibility
      */
     public function scenarioExists(string $scenario): bool
     {
-        return isset($this->scenarios[$scenario]);
+        // Always return true since we only use default scenario
+        return true;
     }
 
     /**
      * Get scenario metadata
+     * Always returns default scenario metadata
      */
     public function getScenarioMetadata(string $scenario): array
     {
