@@ -5,6 +5,7 @@ namespace MockServer\MobileApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ChangesController
 {
@@ -14,6 +15,21 @@ class ChangesController
      */
     public function submitChanges(Request $request)
     {
+        // Add 5 second delay
+        sleep(5);
+        
+        // Log incoming request for debugging duplicates
+        $requestId = Str::random(8);
+        $requestData = $request->all();
+        
+        Log::info('[CHANGES-REQUEST] Full request received', [
+            'request_id' => $requestId,
+            'timestamp' => now()->toIso8601String(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'full_request_data' => $requestData
+        ]);
+        
         // Check authentication
         if (!$this->isAuthenticated($request)) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
@@ -67,12 +83,6 @@ class ChangesController
                 $response['data']['media'][] = $result;
             }
         }
-        
-        // Log the changes for debugging
-        Log::info('Mobile API changes submitted', [
-            'request' => $changes,
-            'response' => $response
-        ]);
         
         return response()->json($response);
     }

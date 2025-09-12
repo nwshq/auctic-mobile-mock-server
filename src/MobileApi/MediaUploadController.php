@@ -22,6 +22,30 @@ class MediaUploadController
      */
     public function requestUpload(Request $request)
     {
+        // Add 5 second delay
+        sleep(5);
+        
+        // Log incoming upload request for debugging duplicates
+        $requestId = Str::random(8);
+        $requestData = $request->all();
+        $mediaCount = isset($requestData['media']) ? count($requestData['media']) : 0;
+        
+        \Illuminate\Support\Facades\Log::info('[UPLOAD-REQUEST-IN] Upload request received', [
+            'request_id' => $requestId,
+            'timestamp' => now()->toIso8601String(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'media_count' => $mediaCount,
+            'media_items' => array_map(function($item) {
+                return [
+                    'identifier' => $item['identifier'] ?? null,
+                    'filename' => $item['filename'] ?? null,
+                    'content_type' => $item['content_type'] ?? null,
+                    'size' => $item['size'] ?? null
+                ];
+            }, $requestData['media'] ?? [])
+        ]);
+        
         $request->validate([
             'media' => 'required|array',
             'media.*.identifier' => 'required|string',
@@ -66,6 +90,19 @@ class MediaUploadController
      */
     public function mockS3Upload(Request $request, string $uploadId)
     {
+        // Add 5 second delay
+        sleep(5);
+        
+        \Illuminate\Support\Facades\Log::info('[S3-UPLOAD] Upload received', [
+            'upload_id' => $uploadId,
+            'timestamp' => now()->toIso8601String(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'content_type' => $request->header('Content-Type'),
+            'content_length' => $request->header('Content-Length'),
+            'has_file' => $request->hasFile('file')
+        ]);
+        
         // Find the metadata by upload ID using MediaStorageService
         $storageKey = $this->mediaStorageService->getStorageKeyByUploadId($uploadId);
         
