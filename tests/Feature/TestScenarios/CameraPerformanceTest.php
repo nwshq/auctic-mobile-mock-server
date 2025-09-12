@@ -103,14 +103,15 @@ class CameraPerformanceTest extends TestCase
             })
             ->once();
         
-        // Mock the actual logging from CameraPerformanceStrategy
+        // Mock all info logging (from CameraPerformanceStrategy and tracker)
         Log::shouldReceive('info')
             ->withArgs(function ($message, $context) {
                 return str_contains($message, '[UPLOAD-REQUEST-IN]') ||
                        str_contains($message, '[CHANGES-REQUEST]') ||
-                       str_contains($message, '[S3-UPLOAD]');
+                       str_contains($message, '[S3-UPLOAD]') ||
+                       str_contains($message, '[CAMERA-PERFORMANCE-TRACKER]');
             })
-            ->once(); 
+            ->atLeast()->once(); 
         
         // Activate camera performance scenario
         $activateResponse = $this->postJson('/api/test-scenarios/activate', [

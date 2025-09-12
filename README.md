@@ -101,6 +101,86 @@ The mock server includes a sophisticated test scenario system designed for Maest
 - `POST /test-scenarios/reset` - Reset test session
 - `GET /test-scenarios/available` - List all available scenarios
 
+### Camera Performance Analysis API
+These endpoints are only available when the `camera-performance-test` scenario is active:
+
+- `GET /api/test-scenarios/camera-performance/analysis` - Get detailed analysis of upload and changes requests
+- `POST /api/test-scenarios/camera-performance/clear` - Clear tracking data and reinitialize
+
+#### Analysis Endpoint
+Returns comprehensive metrics about media uploads and changes during a camera performance test session.
+
+**Request:**
+```bash
+GET /api/test-scenarios/camera-performance/analysis
+Headers:
+  X-Test-Session-ID: {session_id}
+# OR
+GET /api/test-scenarios/camera-performance/analysis?test_session_id={session_id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "session_id": "maestro_session_xxx",
+    "started_at": "2025-09-12T20:00:00Z",
+    "analysis_at": "2025-09-12T20:30:00Z",
+    "upload_requests": {
+      "total_requests": 26,
+      "total_media_items": 28,
+      "unique_media_items": 25,
+      "duplicate_items": 3,
+      "unique_identifiers": ["id1", "id2", ...],
+      "duplicates": {"id5": 2, "id10": 2}
+    },
+    "changes_requests": {
+      "total_requests": 5,
+      "total_media_items": 25,
+      "unique_media_items": 25,
+      "unique_identifiers": ["temp_id1", "temp_id2", ...]
+    },
+    "timeline": {
+      "upload_requests": [...],
+      "changes_requests": [...]
+    }
+  },
+  "summary": {
+    "total_unique_uploads": 25,
+    "total_upload_requests": 26,
+    "total_duplicate_uploads": 3,
+    "duplicate_upload_identifiers": {
+      "unique_id_5": 2,
+      "unique_id_10": 2,
+      "unique_id_15": 2
+    },
+    "total_unique_changes": 25,
+    "total_changes_requests": 5,
+    "has_duplicates": true
+  }
+}
+```
+
+#### Clear Tracking Endpoint
+Clears all tracking data for the current session and reinitializes tracking.
+
+**Request:**
+```bash
+POST /api/test-scenarios/camera-performance/clear
+Headers:
+  X-Test-Session-ID: {session_id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Tracking data cleared and re-initialized",
+  "session_id": "maestro_session_xxx"
+}
+```
+
 ### Available Scenarios
 
 #### Default Scenario
@@ -113,8 +193,10 @@ The mock server includes a sophisticated test scenario system designed for Maest
 - **Description**: Simulates performance testing conditions for camera features
 - **Effects**:
   - 5-second delay on `/catalog/changes`, `/catalog/request-upload`, and S3 upload endpoints
-  - Extensive request logging for debugging
+  - Extensive request logging for debugging (`[UPLOAD-REQUEST-IN]` and `[CHANGES-REQUEST]` logs)
   - Fixed `last_modified` timestamp (2025-08-27 20:24:35) on `/catalog/hydrate`
+  - Automatic tracking of all upload and changes requests for analysis
+  - Access to performance analysis endpoints for metrics and duplicate detection
 
 ### Example Maestro Integration
 ```yaml

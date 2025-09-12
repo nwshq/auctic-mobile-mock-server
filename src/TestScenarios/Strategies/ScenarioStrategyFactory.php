@@ -45,8 +45,8 @@ class ScenarioStrategyFactory
             throw new InvalidArgumentException("Strategy class {$strategyClass} must implement ScenarioStrategyInterface");
         }
         
-        // Create and cache the instance
-        self::$instances[$scenario] = new $strategyClass();
+        // Create and cache the instance using Laravel's container for dependency injection
+        self::$instances[$scenario] = app($strategyClass);
         
         return self::$instances[$scenario];
     }
