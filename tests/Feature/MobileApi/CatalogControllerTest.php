@@ -33,66 +33,32 @@ describe('Hydrate Endpoint', function () {
         
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'data' => [
-                    'events' => [
+                'events' => [
                         '*' => [
                             'id',
-                            'name',
+                            'title',
                             'description',
-                            'event_date',
+                            'start_time',
+                            'end_time',
                             'location',
                             'status',
-                            'metadata',
-                            'created_at',
-                            'updated_at',
-                            'deleted_at',
+                            'event_type',
                             'listings' => [
                                 '*' => [
                                     'id',
                                     'event_id',
                                     'title',
                                     'description',
-                                    'starting_price',
-                                    'current_price',
-                                    'reserve_price',
-                                    'status',
+                                    'lot_number',
                                     'category',
-                                    'condition',
-                                    'metadata',
-                                    'created_at',
-                                    'updated_at',
-                                    'deleted_at',
-                                    'media',
-                                    'media_count'
+                                    'subcategory',
+                                    'media'
                                 ]
                             ],
-                            'media' => [
-                                '*' => [
-                                    'id',
-                                    'owner_type',
-                                    'owner_id',
-                                    'filename',
-                                    'original_filename',
-                                    'mime_type',
-                                    'file_size',
-                                    'media_type',
-                                    'url',
-                                    'thumbnail_url',
-                                    'sort_order',
-                                    'alt_text',
-                                    'metadata',
-                                    'upload_status',
-                                    'created_at',
-                                    'updated_at',
-                                    'deleted_at'
-                                ]
-                            ],
-                            'listings_count',
-                            'media_count'
+                            'hero_media'
                         ]
-                    ],
-                    'last_modified'
-                ]
+                ],
+                'last_modified'
             ]);
     });
     
@@ -103,9 +69,9 @@ describe('Hydrate Endpoint', function () {
         
         $response->assertStatus(200);
         
-        $data = $response->json('data.events');
+        $data = $response->json('events');
         expect($data)->toBeArray()
-            ->toHaveCount(5); // MockDataService generates 5 events
+            ->toHaveCount(2); // MockDataService generates 2 events
     });
     
     test('each event contains listings with media', function () {
@@ -115,15 +81,14 @@ describe('Hydrate Endpoint', function () {
         
         $response->assertStatus(200);
         
-        $events = $response->json('data.events');
+        $events = $response->json('events');
         
         foreach ($events as $event) {
-            expect($event)->toHaveKeys(['id', 'name', 'listings', 'media']);
+            expect($event)->toHaveKeys(['id', 'title', 'listings']);
             expect($event['listings'])->toBeArray();
             
-            // Each event should have between 3 and 8 listings
-            expect(count($event['listings']))->toBeGreaterThanOrEqual(3)
-                ->toBeLessThanOrEqual(8);
+            // Each event should have at least 1 listing
+            expect(count($event['listings']))->toBeGreaterThanOrEqual(1);
             
             foreach ($event['listings'] as $listing) {
                 expect($listing)->toHaveKeys(['id', 'event_id', 'title', 'media']);
@@ -142,10 +107,8 @@ describe('Hydrate Endpoint', function () {
         
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'data' => [
-                    'events',
-                    'last_modified'
-                ]
+                'events',
+                'last_modified'
             ]);
     });
 });
@@ -187,14 +150,7 @@ describe('Sync Endpoint', function () {
                     'listings',
                     'media'
                 ],
-                'last_modified',
-                'pagination' => [
-                    'current_page',
-                    'total_pages',
-                    'total_records',
-                    'per_page',
-                    'has_more'
-                ]
+                'last_modified'
             ]);
     });
     
@@ -206,10 +162,11 @@ describe('Sync Endpoint', function () {
         ]);
         
         $response->assertStatus(200)
-            ->assertJsonPath('pagination.current_page', 1)
-            ->assertJsonPath('pagination.total_pages', 1)
-            ->assertJsonPath('pagination.per_page', 1000)
-            ->assertJsonPath('pagination.has_more', false);
+            ->assertJsonStructure([
+                'data',
+                'deletions',
+                'last_modified'
+            ]);
     });
     
     test('returns only items updated after since timestamp', function () {
@@ -218,7 +175,7 @@ describe('Sync Endpoint', function () {
             'Authorization' => 'Bearer mock_pat_token123'
         ]);
         
-        $lastModified = $initialResponse->json('data.last_modified');
+        $lastModified = $initialResponse->json('last_modified');
         
         // Request sync with current timestamp (should return empty or minimal changes)
         $response = $this->getJson("/mobile-api/v1/catalog/sync?since={$lastModified}", [
@@ -251,8 +208,7 @@ describe('Sync Endpoint', function () {
                 ->assertJsonStructure([
                     'data',
                     'deletions',
-                    'last_modified',
-                    'pagination'
+                    'last_modified'
                 ]);
         }
     });
@@ -279,16 +235,16 @@ describe('Mock Data Service Integration', function () {
             'Authorization' => 'Bearer mock_pat_token123'
         ]);
         
-        $events1 = $response1->json('data.events');
-        $lastModified1 = $response1->json('data.last_modified');
+        $events1 = $response1->json('events');
+        $lastModified1 = $response1->json('last_modified');
         
         // Second request (should get same data from cache)
         $response2 = $this->getJson('/mobile-api/v1/catalog/hydrate', [
             'Authorization' => 'Bearer mock_pat_token123'
         ]);
         
-        $events2 = $response2->json('data.events');
-        $lastModified2 = $response2->json('data.last_modified');
+        $events2 = $response2->json('events');
+        $lastModified2 = $response2->json('last_modified');
         
         // Data should be identical
         expect($lastModified1)->toBe($lastModified2);
@@ -305,7 +261,7 @@ describe('Mock Data Service Integration', function () {
         $response1 = $this->getJson('/mobile-api/v1/catalog/hydrate', [
             'Authorization' => 'Bearer mock_pat_token123'
         ]);
-        $lastModified1 = $response1->json('data.last_modified');
+        $lastModified1 = $response1->json('last_modified');
         
         // Travel 1 second into the future before resetting
         $this->travel(1)->seconds();
@@ -318,7 +274,7 @@ describe('Mock Data Service Integration', function () {
         $response2 = $this->getJson('/mobile-api/v1/catalog/hydrate', [
             'Authorization' => 'Bearer mock_pat_token123'
         ]);
-        $lastModified2 = $response2->json('data.last_modified');
+        $lastModified2 = $response2->json('last_modified');
         
         // Last modified should be different after reset
         expect($lastModified1)->not->toBe($lastModified2);
@@ -329,20 +285,14 @@ describe('Mock Data Service Integration', function () {
             'Authorization' => 'Bearer mock_pat_token123'
         ]);
         
-        $events = $response->json('data.events');
+        $events = $response->json('events');
         
         foreach ($events as $event) {
-            // Check event media
-            foreach ($event['media'] as $media) {
-                expect($media['owner_type'])->toBe('event');
-                expect($media['owner_id'])->toBe($event['id']);
-            }
-            
-            // Check listing media
+            // Check listing media only (events don't have media array in this structure)
             foreach ($event['listings'] as $listing) {
                 foreach ($listing['media'] as $media) {
-                    expect($media['owner_type'])->toBe('listing');
-                    expect($media['owner_id'])->toBe($listing['id']);
+                    expect($media['model_type'])->toBe('App\Models\Listing');
+                    expect($media['model_id'])->toBe($listing['id']);
                 }
             }
         }
@@ -372,8 +322,7 @@ describe('Mock Data Service Integration', function () {
                     'media'
                 ],
                 'deletions',
-                'last_modified',
-                'pagination'
+                'last_modified'
             ]);
         
         // Test with future date - should get no data

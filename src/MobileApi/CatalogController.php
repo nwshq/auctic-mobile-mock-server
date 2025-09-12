@@ -82,7 +82,7 @@ class CatalogController
                 ]
             ],
             'fallback_image_url' => 'https://placehold.co/600x400/orange/white',
-            'last_modified' => '2025-08-27 20:24:35'
+            'last_modified' => $data['last_modified'] ?? now()->format('Y-m-d H:i:s')
         ];
         
         return response()->json($response);

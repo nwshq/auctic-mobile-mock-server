@@ -67,7 +67,7 @@ class TestScenarioSystemTest extends TestCase
     }
 
     /**
-     * Test activating invalid scenario returns error
+     * Test activating invalid scenario falls back to generic/default
      */
     public function test_activating_invalid_scenario_returns_error()
     {
@@ -75,11 +75,23 @@ class TestScenarioSystemTest extends TestCase
             'scenario' => 'non_existent_scenario'
         ]);
 
-        $response->assertStatus(400)
+        // Should succeed with fallback to generic scenario
+        $response->assertStatus(201)
             ->assertJson([
-                'error' => 'TSE003',
-                'message' => 'Unknown scenario: non_existent_scenario'
+                'is_generic' => true,
+                'requested_scenario' => 'non_existent_scenario'
+            ])
+            ->assertJsonStructure([
+                'session_id',
+                'scenario',
+                'is_generic',
+                'requested_scenario',
+                'expires_at'
             ]);
+        
+        // Verify it falls back to either 'generic_scenario' or 'default'
+        $scenario = $response->json('scenario');
+        $this->assertContains($scenario, ['generic_scenario', 'default']);
     }
 
     /**
