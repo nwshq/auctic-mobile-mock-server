@@ -8,12 +8,9 @@ use Illuminate\Support\Str;
 use MockServer\Services\MediaStorageService;
 
 class MediaUploadController
-{
-    private MediaStorageService $mediaStorageService;
-    
-    public function __construct(MediaStorageService $mediaStorageService)
+{    
+    public function __construct(private MediaStorageService $mediaStorageService, private string $baseUrl, private string $baseS3Url)
     {
-        $this->mediaStorageService = $mediaStorageService;
     }
     
     /**
@@ -45,13 +42,12 @@ class MediaUploadController
                 'upload_id' => $uploadId,
             ]);
             
-            $baseUrl = env('APP_URL', 'http://localhost:8000');
             $expiresAt = now()->addHour()->toIso8601String();
             
             $uploadRequests[] = [
                 'identifier' => $item['identifier'],
                 'storage_key' => $storageKey,
-                'upload_url' => "{$baseUrl}/mock-s3-upload/{$uploadId}",
+                'upload_url' => "{$this->baseUrl}/mock-s3-upload/{$uploadId}",
                 'expires_at' => $expiresAt,
             ];
         }
@@ -158,7 +154,6 @@ class MediaUploadController
     public function getListingMedia(Request $request, string $listingId, string $collection)
     {
         $mediaItems = $this->mediaStorageService->getListingMedia($listingId, $collection);
-        $baseUrl = env('MEDIA_BASE_URL', 'https://bucket.s3.amazonaws.com');
         
         $response = [];
         
@@ -173,16 +168,16 @@ class MediaUploadController
                 'file_name' => $filename,
                 'mime_type' => $item['mime_type'],
                 'size' => $item['size'],
-                'url' => "{$baseUrl}/{$listingId}/{$filename}",
+                'url' => "{$this->baseS3Url}/{$listingId}/{$filename}",
                 'created_at' => $item['created_at'],
                 'updated_at' => $item['updated_at'],
                 'custom_properties' => [],
                 'generated_conversions' => [],
                 'uuid' => $item['uuid'],
-                'preview_url' => "{$baseUrl}/{$item['id']}/conversions/{$nameWithoutExt}-preview.jpg",
-                'thumbnail_url' => "{$baseUrl}/{$item['id']}/conversions/{$nameWithoutExt}-thumb.jpg",
-                'original_url' => "{$baseUrl}/{$listingId}/{$filename}",
-                'xl_url' => "{$baseUrl}/{$item['id']}/conversions/{$nameWithoutExt}-xl.jpg",
+                'preview_url' => "{$this->baseS3Url}/{$item['id']}/conversions/{$nameWithoutExt}-preview.jpg",
+                'thumbnail_url' => "{$this->baseS3Url}/{$item['id']}/conversions/{$nameWithoutExt}-thumb.jpg",
+                'original_url' => "{$this->baseS3Url}/{$listingId}/{$filename}",
+                'xl_url' => "{$this->baseS3Url}/{$item['id']}/conversions/{$nameWithoutExt}-xl.jpg",
                 'order' => $index,
                 'extension' => $extension,
             ];
