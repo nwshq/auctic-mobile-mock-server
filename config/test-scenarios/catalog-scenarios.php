@@ -46,5 +46,41 @@ return [
                 ]
             ]
         ]
+    ],
+
+    'rotation-test' => [
+        'name' => 'Rotation Test',
+        'description' => 'Tracks media changes during device rotation (1 added, 1 removed)',
+        'responses' => [
+            'catalog.changes' => [
+                'type' => 'dynamic',
+                'generator' => \MockServer\TestScenarios\Generators\RotationTestGenerator::class,
+                'parameters' => [
+                    'enable_logging' => true,
+                    'track_changes' => true
+                ]
+            ],
+            'catalog.request-upload' => [
+                'type' => 'dynamic',
+                'generator' => \MockServer\TestScenarios\Generators\RotationTestGenerator::class,
+                'parameters' => [
+                    'enable_logging' => true
+                ]
+            ],
+            'mock-s3.upload' => [
+                'type' => 'dynamic',
+                'generator' => \MockServer\TestScenarios\Generators\RotationTestGenerator::class,
+                'parameters' => [
+                    'enable_logging' => true
+                ]
+            ],
+            'catalog.hydrate' => [
+                'type' => 'dynamic',
+                'generator' => \MockServer\TestScenarios\Generators\RotationTestGenerator::class,
+                'parameters' => [
+                    'fixed_last_modified' => '2025-08-27 20:24:35'
+                ]
+            ]
+        ]
     ]
 ];
