@@ -107,6 +107,12 @@ These endpoints are only available when the `camera-performance-test` scenario i
 - `GET /api/test-scenarios/camera-performance/analysis` - Get detailed analysis of upload and changes requests
 - `POST /api/test-scenarios/camera-performance/clear` - Clear tracking data and reinitialize
 
+### Rotation Test Analysis API
+These endpoints are only available when the `rotation-test` scenario is active:
+
+- `GET /api/test-scenarios/rotation-test/analysis` - Get analysis of media changes during device rotation
+- `POST /api/test-scenarios/rotation-test/clear` - Clear tracking data and reinitialize
+
 #### Analysis Endpoint
 Returns comprehensive metrics about media uploads and changes during a camera performance test session.
 
@@ -181,6 +187,128 @@ Headers:
 }
 ```
 
+### Rotation Test Analysis Details
+
+#### Analysis Endpoint
+Returns comprehensive metrics about media changes during device rotation testing.
+
+**Request:**
+```bash
+GET /api/test-scenarios/rotation-test/analysis
+Headers:
+  X-Test-Session-ID: {session_id}
+# OR
+GET /api/test-scenarios/rotation-test/analysis?test_session_id={session_id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "session_id": "maestro_session_xxx",
+    "started_at": "2025-09-17T22:03:00Z",
+    "analysis_at": "2025-09-17T22:04:00Z",
+    "media_changes": {
+      "total_changes": 2,
+      "total_added": 1,
+      "total_removed": 1,
+      "unique_added": 1,
+      "unique_removed": 1,
+      "added_identifiers": ["1e9dfd0f-63bf-42d1-85b7-173af42f2f7d"],
+      "removed_identifiers": ["72054"],
+      "matches_expected_pattern": true,
+      "expected_pattern": "1 new media and 1 removed"
+    },
+    "rotation_events": {
+      "total_events": 3,
+      "events": [
+        {
+          "timestamp": "2025-09-17T22:03:00Z",
+          "orientation": "portrait",
+          "media_state": ["media_001"]
+        },
+        {
+          "timestamp": "2025-09-17T22:03:15Z",
+          "orientation": "landscape",
+          "media_state": ["media_001"]
+        },
+        {
+          "timestamp": "2025-09-17T22:03:50Z",
+          "orientation": "portrait",
+          "media_state": ["media_002"]
+        }
+      ]
+    },
+    "timeline": {
+      "media_changes": [
+        {
+          "timestamp": "2025-09-17T22:03:32Z",
+          "added_count": 0,
+          "removed_count": 1,
+          "removed_identifiers": ["72054"]
+        },
+        {
+          "timestamp": "2025-09-17T22:03:50Z",
+          "added_count": 1,
+          "removed_count": 0,
+          "added_identifiers": ["1e9dfd0f-63bf-42d1-85b7-173af42f2f7d"]
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_unique_added": 1,
+    "total_unique_removed": 1,
+    "matches_expected_pattern": true,
+    "expected_pattern": "1 new media and 1 removed",
+    "rotation_events_count": 3
+  }
+}
+```
+
+**Key Points:**
+- The test validates that exactly 1 media is added and 1 is removed during rotation
+- Changes may arrive in separate batches (deletion first, then creation after upload)
+- The `matches_expected_pattern` field indicates if the test passed
+- Timeline shows when each change occurred
+
+### How Rotation Test Flow Works
+
+The rotation test scenario tracks media changes that occur when a device is rotated while capturing media. Here's the typical flow:
+
+1. **Activation**: Test scenario is activated via `/test-scenarios/activate` with `rotation-test`
+2. **Initial State**: User takes a photo in portrait mode
+3. **Rotation**: Device is rotated to landscape
+4. **Media Deletion**: Original media is marked for deletion and sent immediately to `/catalog/changes`:
+   ```json
+   {
+     "changes": {
+       "media": [
+         {"action": "delete", "id": 72054, "last_modified": "2025-09-17 22:03:32"}
+       ]
+     }
+   }
+   ```
+5. **Media Recreation**: New rotated media is uploaded to S3
+6. **Media Creation**: After upload completes, creation is sent to `/catalog/changes`:
+   ```json
+   {
+     "changes": {
+       "media": [
+         {"action": "create", "temp_id": "1e9dfd0f-63bf-42d1-85b7-173af42f2f7d", ...}
+       ]
+     }
+   }
+   ```
+7. **Analysis**: Call `/api/test-scenarios/rotation-test/analysis` to verify the pattern
+
+**Important Notes:**
+- Deletions and creations typically arrive in separate HTTP requests
+- There may be a 10-20 second delay between deletion and creation (due to S3 upload time)
+- The tracker accumulates all changes across requests for the final analysis
+- The test passes if exactly 1 unique media was added AND 1 unique media was removed
+
 ### Available Scenarios
 
 #### Default Scenario
@@ -197,6 +325,16 @@ Headers:
   - Fixed `last_modified` timestamp (2025-08-27 20:24:35) on `/catalog/hydrate`
   - Automatic tracking of all upload and changes requests for analysis
   - Access to performance analysis endpoints for metrics and duplicate detection
+
+#### Rotation Test
+- **Name**: `rotation-test`
+- **Description**: Tracks media changes during device rotation
+- **Effects**:
+  - Tracks all media additions and deletions from `/catalog/changes` requests
+  - Validates expected pattern: 1 new media added and 1 removed during rotation
+  - Logs all media changes with `[ROTATION-TEST]` prefix
+  - Fixed `last_modified` timestamp on `/catalog/hydrate`
+  - Access to rotation analysis endpoints for validation
 
 ### Example Maestro Integration
 ```yaml
@@ -274,6 +412,7 @@ Add your strategy to the factory in `src/TestScenarios/Strategies/ScenarioStrate
 private static array $strategies = [
     'default' => DefaultScenarioStrategy::class,
     'camera-performance-test' => CameraPerformanceStrategy::class,
+    'rotation-test' => RotationTestStrategy::class,
     'your-scenario' => YourScenarioStrategy::class, // Add this line
 ];
 ```

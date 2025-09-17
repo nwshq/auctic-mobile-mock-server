@@ -12,6 +12,7 @@ class ScenarioStrategyFactory
     private static array $strategies = [
         'default' => DefaultScenarioStrategy::class,
         'camera-performance-test' => CameraPerformanceStrategy::class,
+        'rotation-test' => RotationTestStrategy::class,
     ];
     
     /**
