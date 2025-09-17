@@ -114,18 +114,29 @@ class RotationTestStrategy implements ScenarioStrategyInterface
         $changes = $requestData['changes'];
         $mediaItems = $changes['media'] ?? [];
 
+        Log::info('[ROTATION-TEST] Received changes request', [
+            'session_id' => $sessionId,
+            'media_items_count' => count($mediaItems),
+            'raw_media_items' => $mediaItems
+        ]);
+
         // Analyze media changes to detect additions and removals
         $added = [];
         $removed = [];
 
         foreach ($mediaItems as $item) {
-            // Items with temp_id and no existing id are new additions
-            if (isset($item['temp_id']) && !isset($item['id'])) {
-                $added[] = ['identifier' => $item['temp_id']];
-            }
-            // Items marked as deleted are removals
-            if (isset($item['deleted']) && $item['deleted'] === true) {
+            // Check the action field to determine operation type
+            $action = $item['action'] ?? null;
+
+            if ($action === 'create') {
+                // New media creation
+                $added[] = ['identifier' => $item['temp_id'] ?? $item['id'] ?? null];
+            } elseif ($action === 'delete') {
+                // Media deletion
                 $removed[] = ['identifier' => $item['id'] ?? $item['temp_id'] ?? null];
+            } elseif (isset($item['temp_id']) && !isset($item['id'])) {
+                // Legacy format: Items with temp_id and no existing id are new additions
+                $added[] = ['identifier' => $item['temp_id']];
             }
         }
 

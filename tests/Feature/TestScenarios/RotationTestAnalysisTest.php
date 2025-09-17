@@ -298,6 +298,39 @@ class RotationTestAnalysisTest extends TestCase
         $this->assertEquals(1, $timeline['media_changes'][2]['removed_count']);
     }
 
+    public function test_tracks_deletion_with_action_delete()
+    {
+        // Initialize tracker
+        $this->tracker->initializeSession($this->testSessionId);
+
+        // Simulate the actual request format from the logs
+        // First batch: deletion with action: "delete" and id: 72054
+        $this->tracker->trackMediaChanges($this->testSessionId, [
+            'added' => [],
+            'removed' => [['identifier' => '72054']]
+        ]);
+
+        $response = $this->getJson("/api/test-scenarios/rotation-test/analysis?test_session_id={$this->testSessionId}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.media_changes.total_removed', 1)
+            ->assertJsonPath('data.media_changes.unique_removed', 1)
+            ->assertJsonPath('summary.total_unique_removed', 1);
+
+        // Now add the creation in second batch
+        $this->tracker->trackMediaChanges($this->testSessionId, [
+            'added' => [['identifier' => '1e9dfd0f-63bf-42d1-85b7-173af42f2f7d']],
+            'removed' => []
+        ]);
+
+        $response = $this->getJson("/api/test-scenarios/rotation-test/analysis?test_session_id={$this->testSessionId}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.media_changes.total_added', 1)
+            ->assertJsonPath('data.media_changes.total_removed', 1)
+            ->assertJsonPath('data.media_changes.matches_expected_pattern', true);
+    }
+
     public function test_real_rotation_scenario()
     {
         // Initialize tracker
