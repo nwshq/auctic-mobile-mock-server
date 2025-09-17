@@ -58,6 +58,11 @@ The server implements a sophisticated test scenario system for Maestro automatio
 - Middleware that intercepts requests and applies scenario-based responses
 - Configuration-driven scenarios in `config/test-scenarios/`
 
+Available test scenarios:
+- **default**: Standard mock server behavior
+- **camera-performance-test**: Tracks and analyzes media upload performance with duplicate detection
+- **rotation-test**: Validates media changes during device rotation (expects 1 added, 1 removed)
+
 ### Environment Configuration
 Key environment variables:
 - `JWT_ENCRYPTION_KEY` - Required for JWT token generation
