@@ -24,7 +24,7 @@ class MediaUploadController
             'media.*.identifier' => 'required|string',
             'media.*.filename' => 'required|string',
             'media.*.content_type' => 'required|string',
-            'media.*.size' => 'required|integer',
+            'media.*.size' => 'required|integer|min:1',
         ]);
         
         $uploadRequests = [];
