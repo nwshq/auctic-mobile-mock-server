@@ -35,14 +35,16 @@ class TestScenarioSystemTest extends TestCase
 
         $scenarios = $response->json('scenarios');
 
-        // Should contain default, camera-performance-test, and rotation-test scenarios
-        $this->assertCount(3, $scenarios);
+        // Should contain default, camera-performance-test, rotation-test, and remove-listing-test scenarios
+        $this->assertCount(4, $scenarios);
         $this->assertEquals('default', $scenarios[0]['name']);
         $this->assertEquals('Default Scenario', $scenarios[0]['display_name']);
         $this->assertEquals('camera-performance-test', $scenarios[1]['name']);
         $this->assertEquals('Camera Performance Test', $scenarios[1]['display_name']);
         $this->assertEquals('rotation-test', $scenarios[2]['name']);
         $this->assertEquals('Rotation Test', $scenarios[2]['display_name']);
+        $this->assertEquals('remove-listing-test', $scenarios[3]['name']);
+        $this->assertEquals('Remove Listing Test', $scenarios[3]['display_name']);
     }
 
     /**

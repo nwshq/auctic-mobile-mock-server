@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use MockServer\TestScenarios\Controllers\TestScenarioController;
 use MockServer\TestScenarios\Controllers\CameraPerformanceAnalysisController;
 use MockServer\TestScenarios\Controllers\RotationTestAnalysisController;
+use MockServer\TestScenarios\Controllers\RemoveListingTestAnalysisController;
 
 // Test Scenario Control API endpoints
 Route::prefix('test-scenarios')->group(function () {
@@ -25,5 +26,12 @@ Route::prefix('test-scenarios')->group(function () {
     Route::prefix('rotation-test')->group(function () {
         Route::get('/analysis', [RotationTestAnalysisController::class, 'getAnalysis']);
         Route::post('/clear', [RotationTestAnalysisController::class, 'clearTracking']);
+    });
+
+    // Remove Listing Test Analysis endpoints
+    Route::prefix('remove-listing-test')->group(function () {
+        Route::get('/analysis', [RemoveListingTestAnalysisController::class, 'getAnalysis']);
+        Route::post('/clear', [RemoveListingTestAnalysisController::class, 'clearTracking']);
+        Route::get('/timeline', [RemoveListingTestAnalysisController::class, 'getTimeline']);
     });
 });

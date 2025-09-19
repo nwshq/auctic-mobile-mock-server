@@ -13,6 +13,7 @@ class ScenarioStrategyFactory
         'default' => DefaultScenarioStrategy::class,
         'camera-performance-test' => CameraPerformanceStrategy::class,
         'rotation-test' => RotationTestStrategy::class,
+        'remove-listing-test' => RemoveListingTestStrategy::class,
     ];
     
     /**
