@@ -62,6 +62,7 @@ Available test scenarios:
 - **default**: Standard mock server behavior
 - **camera-performance-test**: Tracks and analyzes media upload performance with duplicate detection
 - **rotation-test**: Validates media changes during device rotation (expects 1 added, 1 removed)
+- **remove-listing-test**: Validates listing and media removal during deletion (expects 1 listing with all associated media removed)
 
 ### Environment Configuration
 Key environment variables:

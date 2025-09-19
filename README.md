@@ -113,6 +113,13 @@ These endpoints are only available when the `rotation-test` scenario is active:
 - `GET /api/test-scenarios/rotation-test/analysis` - Get analysis of media changes during device rotation
 - `POST /api/test-scenarios/rotation-test/clear` - Clear tracking data and reinitialize
 
+### Remove Listing Test Analysis API
+These endpoints are only available when the `remove-listing-test` scenario is active:
+
+- `GET /api/test-scenarios/remove-listing-test/analysis` - Get analysis of listing and media removals
+- `POST /api/test-scenarios/remove-listing-test/clear` - Clear tracking data and reinitialize
+- `GET /api/test-scenarios/remove-listing-test/timeline` - Get detailed removal timeline
+
 #### Analysis Endpoint
 Returns comprehensive metrics about media uploads and changes during a camera performance test session.
 
@@ -309,6 +316,161 @@ The rotation test scenario tracks media changes that occur when a device is rota
 - The tracker accumulates all changes across requests for the final analysis
 - The test passes if exactly 1 unique media was added AND 1 unique media was removed
 
+### Remove Listing Test Analysis Details
+
+#### Analysis Endpoint
+Returns comprehensive metrics about listing and media removals during listing deletion testing.
+
+**Request:**
+```bash
+GET /api/test-scenarios/remove-listing-test/analysis
+Headers:
+  X-Test-Session-ID: {session_id}
+# OR
+GET /api/test-scenarios/remove-listing-test/analysis?test_session_id={session_id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "session_id": "maestro_session_xxx",
+    "started_at": "2025-09-19T10:00:00Z",
+    "analysis_at": "2025-09-19T10:05:00Z",
+    "removal_summary": {
+      "total_removal_events": 1,
+      "total_listings_removed": 1,
+      "total_media_removed": 5,
+      "unique_listings_removed": 1,
+      "unique_media_removed": 5,
+      "listings_removed": ["listing-001"],
+      "media_removed": ["media-001", "media-002", "media-003", "media-004", "media-005"],
+      "matches_expected_pattern": true,
+      "expected_pattern": "1 listing removed with all associated media",
+      "avg_media_per_listing": 5.0
+    },
+    "media_by_listing": {
+      "listing-001": ["media-001", "media-002", "media-003", "media-004", "media-005"]
+    },
+    "removal_events": {
+      "total_events": 1,
+      "events": [
+        {
+          "timestamp": "2025-09-19T10:04:00Z",
+          "action": "swipe_to_delete",
+          "target_listing": "listing-001",
+          "associated_media_count": 5,
+          "context": {
+            "user_action": "manual_deletion",
+            "screen": "listing_detail"
+          }
+        }
+      ]
+    },
+    "test_result": {
+      "success": true,
+      "message": "Test passed: One listing successfully removed with all associated media",
+      "details": {
+        "listings_removed": 1,
+        "media_items_removed": 5,
+        "expected_listings": 1
+      }
+    }
+  },
+  "summary": {
+    "total_listings_removed": 1,
+    "total_media_removed": 5,
+    "matches_expected_pattern": true,
+    "expected_pattern": "1 listing removed with all associated media",
+    "avg_media_per_listing": 5.0,
+    "test_passed": true
+  }
+}
+```
+
+#### Timeline Endpoint
+Returns detailed timeline of removal events for debugging and analysis.
+
+**Request:**
+```bash
+GET /api/test-scenarios/remove-listing-test/timeline
+Headers:
+  X-Test-Session-ID: {session_id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "session_id": "maestro_session_xxx",
+  "timeline": {
+    "removal_changes": [
+      {
+        "timestamp": "2025-09-19T10:04:00Z",
+        "removed_listings_count": 1,
+        "removed_media_count": 5,
+        "removed_listing_ids": ["listing-001"],
+        "removed_media_ids": ["media-001", "media-002", "media-003", "media-004", "media-005"]
+      }
+    ],
+    "removed_listings": [
+      {
+        "identifier": "listing-001",
+        "title": "Test Listing",
+        "status": "active",
+        "timestamp": "2025-09-19T10:04:00Z",
+        "type": "listing_removed"
+      }
+    ],
+    "removed_media": [
+      {
+        "identifier": "media-001",
+        "listing_id": "listing-001",
+        "timestamp": "2025-09-19T10:04:00Z",
+        "type": "media_removed"
+      },
+      // ... more media items
+    ]
+  },
+  "media_by_listing": {
+    "listing-001": ["media-001", "media-002", "media-003", "media-004", "media-005"]
+  }
+}
+```
+
+### How Remove Listing Test Flow Works
+
+The remove listing test scenario tracks listing and media removals that occur when a user deletes a listing. Here's the typical flow:
+
+1. **Activation**: Test scenario is activated via `/test-scenarios/activate` with `remove-listing-test`
+2. **Initial State**: User has a listing with multiple media items attached
+3. **Deletion Action**: User performs a delete action (swipe-to-delete, delete button, etc.)
+4. **Removal Submission**: Deletion is sent to `/catalog/changes`:
+   ```json
+   {
+     "changes": {
+       "listings": [
+         {"action": "delete", "id": "listing-001", "title": "Test Listing"}
+       ],
+       "media": [
+         {"action": "delete", "id": "media-001", "listing_id": "listing-001"},
+         {"action": "delete", "id": "media-002", "listing_id": "listing-001"},
+         {"action": "delete", "id": "media-003", "listing_id": "listing-001"}
+       ]
+     }
+   }
+   ```
+5. **Analysis**: Call `/api/test-scenarios/remove-listing-test/analysis` to verify the removal
+6. **Timeline**: Call `/api/test-scenarios/remove-listing-test/timeline` for detailed event history
+
+**Key Points:**
+- The test validates that exactly 1 listing is removed with all its associated media
+- Both listing and media deletions should arrive in the same request
+- The `test_result.success` field indicates if the test passed
+- The tracker groups media by listing for easier analysis
+- Average media per listing is calculated to understand the removal scope
+
 ### Available Scenarios
 
 #### Default Scenario
@@ -335,6 +497,17 @@ The rotation test scenario tracks media changes that occur when a device is rota
   - Logs all media changes with `[ROTATION-TEST]` prefix
   - Fixed `last_modified` timestamp on `/catalog/hydrate`
   - Access to rotation analysis endpoints for validation
+
+#### Remove Listing Test
+- **Name**: `remove-listing-test`
+- **Description**: Tracks listing and media removals during listing deletion
+- **Effects**:
+  - Tracks all listing deletions from `/catalog/changes` requests
+  - Tracks all associated media removals when a listing is deleted
+  - Validates expected pattern: 1 listing removed with all its associated media
+  - Logs all removal events with `[REMOVE-LISTING-TEST]` prefix
+  - Fixed `last_modified` timestamp on `/catalog/hydrate`
+  - Access to removal analysis endpoints for validation and timeline viewing
 
 ### Example Maestro Integration
 ```yaml
